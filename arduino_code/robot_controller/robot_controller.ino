@@ -17,42 +17,49 @@ MPUReader testMpu;
 // Initialize PID Controller.
 PIDController testPid(0, 1, 1, 0);
 
+//Initialize testnob
+int pinSwitchStatus = 6;
+int switchStatus;
+
 void setup() {
   Serial.begin(115200);
   Wire.begin();
   delay(2000);
+
+  pinMode (pinSwitchStatus, INPUT);//for testnob
 
   testMpu.mpuSetup();
   delay(1000);
 }
 
 void loop() {  
-//  motor1.setSpeed(128);   // Motor 1 runs forward at 50% speed.
-//  motor2.setSpeed(-128);  // Motor 2 runs backward at 50% speed.
-//  delay(1000);
-//  
-//  motor1.setSpeed(255);   // Motor 1 runs forward at full speed.
-//  motor2.setSpeed(-255);  // Motor 2 runs backward at full speed.
-//  delay(1000);
-//
-//  motor1.setSpeed(0);     // Motor 1 stops.
-//  motor2.setSpeed(0);     // Motor 2 stops.
-//  delay(1000);
-//
-//  motor1.setSpeed(-128);  // Motor 1 runs backward at 50% speed.
-//  motor2.setSpeed(128);   // Motor 2 runs forward at 50% speed.
-//  delay(1000);
-//  
-//  motor1.setSpeed(-255);  // Motor 1 runs backward at full speed.
-//  motor2.setSpeed(255);   // Motor 2 runs forward at full speed.
-//  delay(1000);
-//
-//  motor1.setSpeed(0);     // Motor 1 stops.
-//  motor2.setSpeed(0);     // Motor 2 stops.
-//  delay(1000);
+  //simulated angle by testNob
+//  switchStatus = analogRead(pinSwitchStatus);
+//  Serial.println(switchStatus);
+//  float angle=90*switchStatus/1023;
 
-  float angle = testMpu.updateAngle();
-  Serial.print(angle);
-  Serial.print("\t");
-  Serial.println(testPid.runCycle(angle));
+  
+  //Calculating required power input for motor
+  float angle = testMpu.updateAngle();//Retrieving robot angle
+  float CurrentPIDAnswer = testPid.runCycle(angle);//Using angle to calculate PID input
+  
+  float PIDCorrection = 2500;//<--------------------------------------------------Addapt to change PID input power based on simulink answer
+  float motorInput = (CurrentPIDAnswer / PIDCorrection);
+
+
+
+  //Activating motor to steer wheels in position based on the motorInput and steeringInput
+  int motor1speed = motorInput;// + steeringInputLeft;//Adding steeringinput to motorspeed
+  int motor2speed = motorInput;// + steeringInputRight;//<------------------------------------------Maken
+
+  motor1speed = constrain(motor1speed,-255,255);//Constraining motor input
+  motor2speed = constrain(motor2speed,-255,255);
+
+  motor1.setSpeed(motor1speed);//Sending signal to motor
+  motor1.setSpeed(motor2speed);
+
+
+
+  delay(20);//delay
+
 }
