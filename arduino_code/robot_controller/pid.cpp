@@ -36,7 +36,7 @@ float PIDController::runCycle(float currentValue) {
   // Replace the previous error with the current error.
   _previousError = error;
 
-  // Print the results of the PID calculations if printValues == true.
+  // Print the results of the PID calculations if printValues == true. Might be useful for tweaking.
   if (printValues) {        
     Serial.print(feedP); Serial.print(F("\t"));
     Serial.print(feedI); Serial.print(F("\t"));
