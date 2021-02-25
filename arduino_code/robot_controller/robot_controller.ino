@@ -2,15 +2,20 @@
 #include <SerialCommands.h>
 #include "pid.h"
 #include "mpu_reader.h"
+#include "motor_controller.h"
 
+// Define motor pins.
 #define pwm1a 3
 #define pwm1b 9
 #define pwm2a 10
 #define pwm2b 11
 
-// Configure the motor driver.
+// Configure the motor drivers.
 CytronMD motor1(PWM_PWM, pwm1a, pwm1b);
 CytronMD motor2(PWM_PWM, pwm2a, pwm2b);
+
+// Initialize motor controller.
+MotorController testMotorController(&motor1, &motor2, 2);
 
 // Initialize MPU Reader
 MPUReader testMpu;
@@ -27,44 +32,16 @@ void setup() {
   testMpu.mpuSetup(0x68);
 
   // Setup our custom serial commands.
-  setupSerialCommands();
+  setupSerialCommands(&testMotorController);
   
   delay(1000);
 
   Serial.println(F("*** START ***"));
+
+  testMotorController.setMotorsTimed(100, 100, 1000);
 }
 
 void loop() {  
-//  motor1.setSpeed(128);   // Motor 1 runs forward at 50% speed.
-//  motor2.setSpeed(-128);  // Motor 2 runs backward at 50% speed.
-//  delay(1000);
-//  
-//  motor1.setSpeed(255);   // Motor 1 runs forward at full speed.
-//  motor2.setSpeed(-255);  // Motor 2 runs backward at full speed.
-//  delay(1000);
-//
-//  motor1.setSpeed(0);     // Motor 1 stops.
-//  motor2.setSpeed(0);     // Motor 2 stops.
-//  delay(1000);
-//
-//  motor1.setSpeed(-128);  // Motor 1 runs backward at 50% speed.
-//  motor2.setSpeed(128);   // Motor 2 runs forward at 50% speed.
-//  delay(1000);
-//  
-//  motor1.setSpeed(-255);  // Motor 1 runs backward at full speed.
-//  motor2.setSpeed(255);   // Motor 2 runs forward at full speed.
-//  delay(1000);
-//
-//  motor1.setSpeed(0);     // Motor 1 stops.
-//  motor2.setSpeed(0);     // Motor 2 stops.
-//  delay(1000);
-  
-//  float angle = testMpu.updateAngle();
-//  float pidAnswer = testPid.runCycle(angle);
-//  
-//  Serial.print(angle);
-//  Serial.print("\t");
-//  Serial.println(pidAnswer);
-
   handleSerial();
+  testMotorController.handleMotors();
 }

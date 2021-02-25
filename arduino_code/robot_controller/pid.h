@@ -4,21 +4,21 @@
 #include <Arduino.h>
 
 /*PID controller class.
-Initialize it in the main program and run cycles in a loop of some sort.*/
-class PIDController {  
-  
+  Initialize it in the main program and run cycles in a loop of some sort.*/
+class PIDController {
+
   private:
     float _totalError, _previousError;
     unsigned long _lastUpdateTime;
 
   public:
     float kp, ki, kd;
-    float targetValue;    
+    float targetValue;
     bool printValues;
-  
+
     PIDController(float target, float kp, float ki, float kd);
     float runCycle(float currentValue);
-  
+
 };
 
 #endif

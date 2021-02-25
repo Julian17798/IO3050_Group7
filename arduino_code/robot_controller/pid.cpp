@@ -3,13 +3,13 @@
 
 /*Constructor. Initializes a PID object with its constants and a target value.*/
 PIDController::PIDController(float target = 0, float kp = 1, float ki = 0, float kd = 0) {
-  
+
   _totalError = 0;
   _previousError = 0;
   _lastUpdateTime = millis();
   printValues = false;
-      
-  targetValue = target;      
+
+  targetValue = target;
   this->kp = kp;
   this->ki = ki;
   this->kd = kd;
@@ -17,7 +17,7 @@ PIDController::PIDController(float target = 0, float kp = 1, float ki = 0, float
 
 /*Updates the PID controller and runs one cycle. The input for this method is the variable that needs to
   approach the target value. It returns the result of the PID cycle.*/
-float PIDController::runCycle(float currentValue) {  
+float PIDController::runCycle(float currentValue) {
 
   // Calculate the time difference between the current update and the last update.
   float deltaTime = millis() - _lastUpdateTime;
@@ -37,7 +37,7 @@ float PIDController::runCycle(float currentValue) {
   _previousError = error;
 
   // Print the results of the PID calculations if printValues == true. Might be useful for tweaking.
-  if (printValues) {        
+  if (printValues) {
     Serial.print(feedP); Serial.print(F("\t"));
     Serial.print(feedI); Serial.print(F("\t"));
     Serial.println(feedD);
