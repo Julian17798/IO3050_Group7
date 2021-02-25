@@ -50,17 +50,18 @@ void cmdSetTimedSpeed(SerialCommands* sender) {
   int spd2 = atoi(spd2Str);
   int duration = atoi(timeStr);
 
+  // Activate the motors at the given speeds for a given amount of time.
+  motorController->setMotorsTimed(spd1, spd2, duration);  
+
   sender->GetSerial()->print(F("Set timed speed. Motor 1 spd: "));
   sender->GetSerial()->print(spd1);
   sender->GetSerial()->print(F(", Motor 2 spd: "));
   sender->GetSerial()->print(spd2);
   sender->GetSerial()->print(F(", duration: "));
   sender->GetSerial()->println(duration);
-
-  // Tell the motorcontroller to turn on the motors for a given amount of time.
-  motorController->setMotorsTimed(spd1, spd2, duration);  
 }
 
+/*Serial command that turns on the motors at given speeds.*/
 void cmdSetUntimedSpeed(SerialCommands* sender) {
 
   // Get and validate arguments.
@@ -74,14 +75,16 @@ void cmdSetUntimedSpeed(SerialCommands* sender) {
   int spd1 = atoi(spd1Str);
   int spd2 = atoi(spd2Str);
 
+  // Activate the motors at the given speeds.
+  motorController->setMotorsUntimed(spd1, spd2);
+
   sender->GetSerial()->print(F("Set untimed speed. Motor 1 spd: "));
   sender->GetSerial()->print(spd1);
   sender->GetSerial()->print(F(", Motor 2 spd: "));
   sender->GetSerial()->println(spd2);
-
-  motorController->setMotorsUntimed(spd1, spd2);
 }
 
+/*Serial command that stops the motors.*/
 void cmdStop(SerialCommands* sender) {
 
   // Stop motors and timer
@@ -90,28 +93,31 @@ void cmdStop(SerialCommands* sender) {
   sender->GetSerial()->println(F("Stopped motors"));
 }
 
+/*Serial command that flips the input for a given motor in future commands.*/
 void cmdFlipMotor(SerialCommands* sender) {
-  char* mStr = sender->Next();
-  if (mStr == NULL) {
-    sender->GetSerial()->println(F("ERROR MISSING_ARGUMENT"));
-    return;
-  }
-  else if (!isInt(mStr)) {
-    sender->GetSerial()->println(F("ERROR INVALID_ARGUMENT"));
-    return;
-  }
 
+  // Get and validate the argument.
+  char* mStr = sender->Next();
+  if (!validateIntInput(sender, mStr)) { return; }
+
+  // Turn string argument into
   int m = atoi(mStr);
 
-  if (m != 1 && m != 2) {
+  // Check whether the int value is valid for this command.
+  if (m != 1 && m != 2 && m != 3) {
     sender->GetSerial()->println(F("ERROR INVALID_NUMBER"));
     return;
   }
 
+  // Flip future motor inputs.
   motorController->flipMotor(m);
 
-  sender->GetSerial()->print(F("Flipped motor "));
-  sender->GetSerial()->println(m);
+  if (m != 3) {
+    sender->GetSerial()->print(F("Flipped motor "));
+    sender->GetSerial()->println(m);
+  } else {
+    sender->GetSerial()->println(F("Flipped both motors"));
+  }
 }
 
 /*Checks whether the input string is an integer number.*/
@@ -129,11 +135,15 @@ bool isInt(String str) {
   return true;
 }
 
+/*Checks whether the input string is a valid command argument.*/
 bool validateIntInput(SerialCommands* sender, char* strInput) {
+
+  // Check if the string is empty.
   if (strInput == NULL) {
     sender->GetSerial()->println(F("ERROR MISSING_ARGUMENT"));
     return false;
   }
+  // Check if the string is a valid int.
   else if (!isInt(strInput)) {
     sender->GetSerial()->println(F("ERROR INVALID_ARGUMENT"));
     return false;

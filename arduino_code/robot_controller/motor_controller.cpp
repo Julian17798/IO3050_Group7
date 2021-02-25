@@ -6,32 +6,12 @@ MotorController::MotorController(CytronMD *motor1, CytronMD *motor2, int flipMot
   _motor1 = motor1;
   _motor2 = motor2;
   _timerActive = false;
+  _flipM1 = false;
+  _flipM2 = false;
   _timerTarget = 0;
 
-  // Could probably be more elegant, but whatever.
-  switch (flipMotor) {
-    
-    case 1:
-      _flipM1 = true;
-      _flipM2 = false;
-      break;
+  this->flipMotor(flipMotor);
       
-    case 2:
-      _flipM1 = false;
-      _flipM2 = true;
-      break;
-      
-    case 3:
-      _flipM1 = true;
-      _flipM2 = true;
-      break;
-      
-    default:
-      _flipM1 = false;
-      _flipM2 = false;
-      break;
-      
-  }
 }
 
 /*Handles timed motor commands.*/
@@ -87,6 +67,11 @@ void MotorController::flipMotor(int motor) {
       break;
       
     case 2:
+      _flipM2 = !_flipM2;
+      break;
+
+    case 3:
+      _flipM1 = !_flipM1;
       _flipM2 = !_flipM2;
       break;
       

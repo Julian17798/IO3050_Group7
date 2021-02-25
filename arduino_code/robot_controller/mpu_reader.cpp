@@ -10,7 +10,7 @@ MPUReader::MPUReader(): _mpu() {
 /*MPU setup method. Connects with the MPU at a given address.*/
 void MPUReader::mpuSetup(int address) {
 
-  if (!_mpu.setup(0x68)) {
+  if (!_mpu.setup(address)) {
     while (1) {
       Serial.println(F("MPU connection failed. Please check your connection with `connection_check` example."));
       delay(5000);
