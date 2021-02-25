@@ -87,7 +87,7 @@ void cmdStop(SerialCommands* sender) {
   // Stop motors and timer
   motorController->setMotorsUntimed(0, 0);
 
-  sender->GetSerial()->println(F("Stopped motors."));
+  sender->GetSerial()->println(F("Stopped motors"));
 }
 
 void cmdFlipMotor(SerialCommands* sender) {
@@ -111,8 +111,7 @@ void cmdFlipMotor(SerialCommands* sender) {
   motorController->flipMotor(m);
 
   sender->GetSerial()->print(F("Flipped motor "));
-  sender->GetSerial()->print(m);
-  sender->GetSerial()->println(F("."));
+  sender->GetSerial()->println(m);
 }
 
 /*Checks whether the input string is an integer number.*/

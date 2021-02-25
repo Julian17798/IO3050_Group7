@@ -14,7 +14,7 @@
 CytronMD motor1(PWM_PWM, pwm1a, pwm1b);
 CytronMD motor2(PWM_PWM, pwm2a, pwm2b);
 
-// Initialize motor controller.
+// Initialize motor controller and pass pointers to the motor drivers.
 MotorController testMotorController(&motor1, &motor2, 2);
 
 // Initialize MPU Reader
@@ -31,7 +31,7 @@ void setup() {
   // Setup the MPU reader.
   testMpu.mpuSetup(0x68);
 
-  // Setup our custom serial commands.
+  // Setup our custom serial commands and pass a pointer to the motor controller (required to allow the serial commands to access the controller from another ino file).
   setupSerialCommands(&testMotorController);
   
   delay(1000);
