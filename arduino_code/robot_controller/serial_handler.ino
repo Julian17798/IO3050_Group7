@@ -6,19 +6,19 @@ SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_c
 SerialCommand cmd_test_("!test", cmd_test);
 SerialCommand cmd_argument_test_("!argtest", cmd_argument_test);
 
-/*This function sets up all of our custom serial commands.*/
+/*Sets up all of our custom serial commands.*/
 void setupSerialCommands() { 
   serial_commands_.SetDefaultHandler(cmd_unrecognized);
   serial_commands_.AddCommand(&cmd_test_);
   serial_commands_.AddCommand(&cmd_argument_test_);
 }
 
-/*This function reads the serial input and calls the relevant commands.*/
+/*Reads the serial input and calls the relevant commands.*/
 void handleSerial() {
   serial_commands_.ReadSerial();
 }
 
-/*This is the default handler, and gets called when no other command matches.*/
+/*Default handler. Gets called when no other command matches.*/
 void cmd_unrecognized(SerialCommands* sender, const char* cmd) {  
   sender->GetSerial()->print(F("Unrecognized command ["));
   sender->GetSerial()->print(cmd);
@@ -60,6 +60,6 @@ bool is_int(String str) {
     if (!isdigit(str.charAt(i))) { return false; }
   }
 
-  // Return true if the input string is a valid int
+  // Return true if the input string is a valid int.
   return true;
 }

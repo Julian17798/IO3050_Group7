@@ -18,7 +18,7 @@ void MPUReader::mpuSetup(int address){
     }
 }
 
-/*This method updates and returns the current angle of the MPU.*/
+/*Updates and returns the current angle of the MPU.*/
 float MPUReader::updateAngle(){  
   
   // Get the time difference between now and the previous update.

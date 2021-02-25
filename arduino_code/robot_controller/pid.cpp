@@ -15,7 +15,7 @@ PIDController::PIDController(float target = 0, float kp = 1, float ki = 0, float
   this->kd = kd;
 }
 
-/*This method updates the PID controller and runs one cycle. The input for this method is the variable that needs to
+/*Updates the PID controller and runs one cycle. The input for this method is the variable that needs to
   approach the target value. It returns the result of the PID cycle.*/
 float PIDController::runCycle(float currentValue) {  
 
