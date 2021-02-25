@@ -2,13 +2,14 @@
 #include <MPU9250.h>
 #include "mpu_reader.h"
 
+/*Constructor.*/
 MPUReader::MPUReader():_mpu(){
-  /*Constructor.*/
-
   //empty for now
 }
 
-void MPUReader::mpuSetup(){  
+/*MPU setup method. Connects with the MPU at a given address.*/
+void MPUReader::mpuSetup(int address){  
+  
   if (!_mpu.setup(0x68)) {
         while (1) {
             Serial.println("MPU connection failed. Please check your connection with `connection_check` example.");
@@ -17,8 +18,8 @@ void MPUReader::mpuSetup(){
     }
 }
 
-float MPUReader::updateAngle(){
-  /*This method updates and returns the current angle of the MPU.*/
+/*This method updates and returns the current angle of the MPU.*/
+float MPUReader::updateAngle(){  
   
   // Get the time difference between now and the previous update.
   unsigned long deltaTime = millis() - _lastUpdateTime;

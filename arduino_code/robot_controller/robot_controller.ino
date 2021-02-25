@@ -1,4 +1,5 @@
 #include <CytronMotorDriver.h>
+#include <SerialCommands.h>
 #include "pid.h"
 #include "mpu_reader.h"
 
@@ -22,8 +23,15 @@ void setup() {
   Wire.begin();
   delay(2000);
 
-  testMpu.mpuSetup();
+  // Setup the MPU reader.
+  testMpu.mpuSetup(0x68);
+
+  // Setup our custom serial commands.
+  setupSerialCommands();
+  
   delay(1000);
+
+  Serial.println(F("*** START ***"));
 }
 
 void loop() {  
@@ -50,9 +58,13 @@ void loop() {
 //  motor1.setSpeed(0);     // Motor 1 stops.
 //  motor2.setSpeed(0);     // Motor 2 stops.
 //  delay(1000);
+  
+//  float angle = testMpu.updateAngle();
+//  float pidAnswer = testPid.runCycle(angle);
+//  
+//  Serial.print(angle);
+//  Serial.print("\t");
+//  Serial.println(pidAnswer);
 
-  float angle = testMpu.updateAngle();
-  Serial.print(angle);
-  Serial.print("\t");
-  Serial.println(testPid.runCycle(angle));
+  handleSerial();
 }

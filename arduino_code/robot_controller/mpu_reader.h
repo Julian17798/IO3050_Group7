@@ -4,9 +4,9 @@
 #include <Arduino.h>
 #include <MPU9250.h>
 
-class MPUReader {
-  /*MPU Reader class.
-  Initialize it in the main program. Make sure to run mpuSetup() in Setup(). Use updateAngle() to get the Y angle of the MPU.*/
+/*MPU Reader class.
+Initialize it in the main program. Make sure to run mpuSetup() in Setup(). Use updateAngle() to get the Y angle of the MPU.*/
+class MPUReader {  
   
   private:
     unsigned long _lastUpdateTime;
@@ -15,8 +15,8 @@ class MPUReader {
 
   public:
     MPUReader(void);
-    void mpuSetup(void);
-    float updateAngle(void);
+    void mpuSetup(int address);
+    float updateAngle(void);    
     
 };
 

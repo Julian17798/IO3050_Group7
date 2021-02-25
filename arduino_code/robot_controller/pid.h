@@ -3,9 +3,9 @@
 
 #include <Arduino.h>
 
-class PIDController {
-  /*PID controller class.
-  Initialize it in the main program and run cycles in a loop of some sort.*/
+/*PID controller class.
+Initialize it in the main program and run cycles in a loop of some sort.*/
+class PIDController {  
   
   private:
     float _totalError, _previousError;
@@ -16,7 +16,7 @@ class PIDController {
     float targetValue;    
     bool printValues;
   
-    PIDController(float target = 0, float kp = 1, float ki = 0, float kd = 0);
+    PIDController(float target, float kp, float ki, float kd);
     float runCycle(float currentValue);
   
 };

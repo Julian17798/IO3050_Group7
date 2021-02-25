@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include "pid.h"
 
+/*Constructor. Initializes a PID object with its constants and a target value.*/
 PIDController::PIDController(float target = 0, float kp = 1, float ki = 0, float kd = 0) {
-  /*Constructor. Initializes a PID object with its constants and a target value.*/
-
+  
   _totalError = 0;
   _previousError = 0;
   _lastUpdateTime = millis();
@@ -15,9 +15,9 @@ PIDController::PIDController(float target = 0, float kp = 1, float ki = 0, float
   this->kd = kd;
 }
 
-float PIDController::runCycle(float currentValue) {
-  /*This method updates the PID controller and runs one cycle. The input for this method is the variable that needs to
+/*This method updates the PID controller and runs one cycle. The input for this method is the variable that needs to
   approach the target value. It returns the result of the PID cycle.*/
+float PIDController::runCycle(float currentValue) {  
 
   // Calculate the time difference between the current update and the last update.
   float deltaTime = millis() - _lastUpdateTime;
