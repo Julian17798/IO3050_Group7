@@ -2,7 +2,7 @@
 #include "pid.h"
 
 /*Constructor. Initializes a PID object with its constants and a target value.*/
-PIDController::PIDController(float target = 0, float kp = 1, float ki = 0, float kd = 0) {
+PIDController::PIDController(float target, float kp, float ki, float kd) {
 
   _totalError = 0;
   _previousError = 0;
