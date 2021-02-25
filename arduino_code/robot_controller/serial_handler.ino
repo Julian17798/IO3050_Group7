@@ -1,5 +1,3 @@
-#include <SerialCommands.h>
-
 // Serial Commands setup
 char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
@@ -22,14 +20,14 @@ void handleSerial() {
 
 /*This is the default handler, and gets called when no other command matches.*/
 void cmd_unrecognized(SerialCommands* sender, const char* cmd) {  
-  sender->GetSerial()->print("Unrecognized command [");
+  sender->GetSerial()->print(F("Unrecognized command ["));
   sender->GetSerial()->print(cmd);
-  sender->GetSerial()->println("]");
+  sender->GetSerial()->println(F("]"));
 }
 
 /*Serial command test function.*/
 void cmd_test(SerialCommands* sender) {
-  sender->GetSerial()->println("Test command fired!");
+  sender->GetSerial()->println(F("Test command fired!"));
 }
 
 /*Serial command argument test function. Takes one int argument.*/
@@ -38,25 +36,30 @@ void cmd_argument_test(SerialCommands* sender) {
   char* arg_str = sender->Next();
   
   if (arg_str == NULL) {
-    sender->GetSerial()->println("ERROR NO_ARGUMENT");
+    sender->GetSerial()->println(F("ERROR NO_ARGUMENT"));
     return;
   }
   else if (!is_int(arg_str)) {
-    sender->GetSerial()->println("ERROR INVALID_ARGUMENT");
+    sender->GetSerial()->println(F("ERROR INVALID_ARGUMENT"));
     return;
   }  
 
   int arg = atoi(arg_str);
-  sender->GetSerial()->print("Argument test command fired! arg: ");
+  sender->GetSerial()->print(F("Argument test command fired! arg: "));
   sender->GetSerial()->println(arg);
 }
 
 /*Checks whether the input string is an integer number.*/
 bool is_int(String str) {
   
-  // Loop over the characters and check if all characters are digits.
-  for (int i = 0; i < str.length(); i++) {
-    if (!isdigit(str.charAt(i)) && str.charAt(0) != '-') { return false; }
+  // Check if the first character is either a digit or a '-'.
+  if (!isdigit(str.charAt(0)) && str.charAt(0) != '-') { return false; }
+  
+  // Loop over the rest of the characters and check if they are digits.
+  for (int i = 1; i < str.length(); i++) {
+    if (!isdigit(str.charAt(i))) { return false; }
   }
+
+  // Return true if the input string is a valid int
   return true;
 }

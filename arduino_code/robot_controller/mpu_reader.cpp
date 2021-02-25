@@ -12,7 +12,7 @@ void MPUReader::mpuSetup(int address){
   
   if (!_mpu.setup(0x68)) {
         while (1) {
-            Serial.println("MPU connection failed. Please check your connection with `connection_check` example.");
+            Serial.println(F("MPU connection failed. Please check your connection with `connection_check` example."));
             delay(5000);
         }
     }
