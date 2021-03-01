@@ -1,9 +1,10 @@
 // Serial Commands setup
 char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
-MotorController *motorController;
+MotorController *mainMotorController;
 
 // Serial commands and their input string triggers
+SerialCommand cmdSwitchMode_("!switchMode", cmdSwitchMode);
 SerialCommand cmdSetTimedSpeed_("!timedSpeed", cmdSetTimedSpeed);
 SerialCommand cmdSetUntimedSpeed_("!untimedSpeed", cmdSetUntimedSpeed);
 SerialCommand cmdStop_("!stop", cmdStop);
@@ -11,9 +12,10 @@ SerialCommand cmdFlipMotor_("!flip", cmdFlipMotor);
 
 /*Sets up all of our custom serial commands.*/
 void setupSerialCommands(MotorController *mCtrl) { 
-  motorController = mCtrl;
+  mainMotorController = mCtrl;
   
   serial_commands_.SetDefaultHandler(cmdUnrecognized);
+  serial_commands_.AddCommand(&cmdSwitchMode_);
   serial_commands_.AddCommand(&cmdSetTimedSpeed_);
   serial_commands_.AddCommand(&cmdSetUntimedSpeed_);
   serial_commands_.AddCommand(&cmdStop_);
@@ -32,8 +34,20 @@ void cmdUnrecognized(SerialCommands* sender, const char* cmd) {
   sender->GetSerial()->println(F("]"));
 }
 
+/*Toggles the mode of the robot.*/
+void cmdSwitchMode(SerialCommands* sender) {
+  balanceMode = !balanceMode;
+
+  if (balanceMode) {
+    sender->GetSerial()->println(F("Balance mode on."));
+  } else {
+    sender->GetSerial()->println(F("Balance mode off"));
+  }
+}
+
 /*Serial command that turns on the motors at given speeds for a given amount of time.*/
 void cmdSetTimedSpeed(SerialCommands* sender) {
+  if (balanceMode) { return; }
 
   // Get and validate arguments.
   char* spd1Str = sender->Next();
@@ -51,7 +65,7 @@ void cmdSetTimedSpeed(SerialCommands* sender) {
   int duration = atoi(timeStr);
 
   // Activate the motors at the given speeds for a given amount of time.
-  motorController->setMotorsTimed(spd1, spd2, duration);  
+  mainMotorController->setMotorsTimed(spd1, spd2, duration);  
 
   sender->GetSerial()->print(F("Set timed speed. Motor 1 spd: "));
   sender->GetSerial()->print(spd1);
@@ -63,6 +77,7 @@ void cmdSetTimedSpeed(SerialCommands* sender) {
 
 /*Serial command that turns on the motors at given speeds.*/
 void cmdSetUntimedSpeed(SerialCommands* sender) {
+  if (balanceMode) { return; }
 
   // Get and validate arguments.
   char* spd1Str = sender->Next();
@@ -76,7 +91,7 @@ void cmdSetUntimedSpeed(SerialCommands* sender) {
   int spd2 = atoi(spd2Str);
 
   // Activate the motors at the given speeds.
-  motorController->setMotorsUntimed(spd1, spd2);
+  mainMotorController->setMotorsUntimed(spd1, spd2);
 
   sender->GetSerial()->print(F("Set untimed speed. Motor 1 spd: "));
   sender->GetSerial()->print(spd1);
@@ -86,9 +101,10 @@ void cmdSetUntimedSpeed(SerialCommands* sender) {
 
 /*Serial command that stops the motors.*/
 void cmdStop(SerialCommands* sender) {
+  if (balanceMode) { return; }
 
   // Stop motors and timer
-  motorController->setMotorsUntimed(0, 0);
+  mainMotorController->setMotorsUntimed(0, 0);
 
   sender->GetSerial()->println(F("Stopped motors"));
 }
@@ -110,7 +126,7 @@ void cmdFlipMotor(SerialCommands* sender) {
   }
 
   // Flip future motor inputs.
-  motorController->flipMotor(m);
+  mainMotorController->flipMotor(m);
 
   if (m != 3) {
     sender->GetSerial()->print(F("Flipped motor "));

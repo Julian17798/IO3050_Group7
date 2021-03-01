@@ -10,12 +10,14 @@ class MPUReader {
 
   private:
     unsigned long _lastUpdateTime;
+    int _ledPin;
     float _gyroAngle, _currentAngle;
     MPU9250 _mpu;
 
   public:
-    MPUReader(void);
+    MPUReader(int ledPin);
     void mpuSetup(int address);
+    void calibrate(void);
     float updateAngle(void);
 
 };

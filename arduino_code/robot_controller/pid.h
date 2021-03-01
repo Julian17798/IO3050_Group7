@@ -12,11 +12,11 @@ class PIDController {
     unsigned long _lastUpdateTime;
 
   public:
-    float kp, ki, kd;
+    float kp, ki, kd, filterCoefficient;
     float targetValue;
     bool printValues;
 
-    PIDController(float target, float kp, float ki, float kd);
+    PIDController(float target, float kp, float ki, float kd, float filterCoefficient);
     float runCycle(float currentValue);
 
 };
