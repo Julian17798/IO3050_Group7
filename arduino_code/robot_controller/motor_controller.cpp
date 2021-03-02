@@ -34,7 +34,7 @@ void MotorController::setMotorSpeeds(int spd1, int spd2) {
   // Flip the input if necessary.
   if (_flipM1) { spd1 *= -1; }
   if (_flipM2) { spd2 *= -1; }
-
+  
   // Set the motor speeds.
   _motor1->setSpeed(spd1);
   _motor2->setSpeed(spd2);

@@ -22,9 +22,9 @@ MotorController motorController(&motor1, &motor2, 2);
 MPUReader mpu(ledPin);
 
 // Initialize PID Controller.
-PIDController pid(0, 201.7, 1301.5, 7.66, 774.2);
+PIDController pid(0, 91.9, 420.4, 5.0, 244.8);
 
-bool balanceMode = true;
+bool balanceMode = false;
 
 void setup() {
   Serial.begin(115200);
@@ -35,15 +35,15 @@ void setup() {
   mpu.mpuSetup(0x68);
 
   // Setup our custom serial commands and pass a pointer to the motor controller (required to allow the serial commands to access the controller from another ino file).
-  setupSerialCommands(&motorController);
+  setupSerialCommands(&motorController, &pid);
   
   delay(1000);
-
-  Serial.println(F("*** START ***"));
 
   motorController.setMotorsUntimed(100, 100);
   delay(1000);
   motorController.setMotorsUntimed(0, 0);
+
+  Serial.println(F("*** START ***"));
 }
 
 void loop() {  

@@ -14,10 +14,12 @@ class PIDController {
   public:
     float kp, ki, kd, filterCoefficient;
     float targetValue;
+    float pidMod;
     bool printValues;
 
     PIDController(float target, float kp, float ki, float kd, float filterCoefficient);
     float runCycle(float currentValue);
+    void modifyConstants(float kp, float ki, float kd);
 
 };
 
