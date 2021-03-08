@@ -2,7 +2,7 @@
 #include "pid.h"
 
 /*Constructor. Initializes a PID object with its constants and a target value.*/
-PIDController::PIDController(float target, float kp, float ki, float kd, float filterCoefficient) {
+PIDController::PIDController(float target, float kp, float ki, float kd) {
 
   _totalError = 0;
   _previousError = 0;
@@ -14,7 +14,6 @@ PIDController::PIDController(float target, float kp, float ki, float kd, float f
   this->kp = kp;
   this->ki = ki;
   this->kd = kd;
-  this->filterCoefficient = filterCoefficient;
 }
 
 /*Updates the PID controller and runs one cycle. The input for this method is the variable that needs to
@@ -33,7 +32,7 @@ float PIDController::runCycle(float currentValue) {
   // Standard PID calculations.
   float feedP = error * kp;
   float feedI = _totalError * ki;
-  float feedD = deltaError / deltaTime * kd; //* filterCoefficient / (1 + filterCoefficient * _totalError); // ?
+  float feedD = deltaError / deltaTime * kd;
 
   // Replace the previous error with the current error.
   _previousError = error;

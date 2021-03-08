@@ -25,7 +25,7 @@ MotorController motorController(&motor1, &motor2, 2);
 MPUReader mpu(ledPin);
 
 // Initialize PID Controller.
-PIDController pid(0, 30, 6, 0.17, 244.8);
+PIDController pid(0, 30, 6, 0.17); // <target, kp, ki, kd>
 
 // Initialize Circular Buffer
 #define bufferSize 20
