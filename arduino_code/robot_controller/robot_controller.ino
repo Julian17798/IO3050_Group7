@@ -1,8 +1,11 @@
 #include <CytronMotorDriver.h>
 #include <SerialCommands.h>
+#include <CircularBuffer.h>
 #include "pid.h"
 #include "mpu_reader.h"
 #include "motor_controller.h"
+
+/*This project requires the SerialCommands library by Pedro Tiago Pereira.*/
 
 // Define motor pins.
 #define pwm1a 3
@@ -22,28 +25,38 @@ MotorController motorController(&motor1, &motor2, 2);
 MPUReader mpu(ledPin);
 
 // Initialize PID Controller.
-PIDController pid(0, 91.9, 420.4, 5.0, 244.8);
+PIDController pid(0, 30, 6, 0.17, 244.8);
 
-bool balanceMode = false;
+// Initialize Circular Buffer
+#define bufferSize 20
+CircularBuffer<float, bufferSize> angleBuffer;
+
+bool balanceMode = true;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(38400);
   Wire.begin();
   delay(2000);
 
   // Setup the MPU reader.
   mpu.mpuSetup(0x68);
 
+  delay(2000);
+
   // Setup our custom serial commands and pass a pointer to the motor controller (required to allow the serial commands to access the controller from another ino file).
   setupSerialCommands(&motorController, &pid);
   
-  delay(1000);
+  delay(2000);
 
   motorController.setMotorsUntimed(100, 100);
   delay(1000);
   motorController.setMotorsUntimed(0, 0);
 
-  Serial.println(F("*** START ***"));
+  for (int i = 0; i < bufferSize; i++){
+    angleBuffer.push(0.0);
+  }
+
+  Serial.println(F("*START*"));
 }
 
 void loop() {  
@@ -54,7 +67,8 @@ void loop() {
   } 
   else {
     float angle = mpu.updateAngle();
-    int pidResult = (int) pid.runCycle(angle);
+    angleBuffer.push(0.0);    
+    int pidResult = (int) pid.runCycle(bufferAvg());
   
     motorController.setMotorsUntimed(pidResult, pidResult);
   
@@ -64,4 +78,13 @@ void loop() {
   
     delay(20);
   }
+}
+
+/*Returns the average of the buffer.*/
+float bufferAvg(){
+  float sum = 0;
+  for (int i = 0; i < bufferSize; i++){
+    sum += angleBuffer[i];
+  }
+  return sum / bufferSize;
 }

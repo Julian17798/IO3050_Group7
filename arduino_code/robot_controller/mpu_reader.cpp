@@ -24,19 +24,19 @@ void MPUReader::mpuSetup(int address) {
 void MPUReader::calibrate() {
   //Calibration acivation
     pinMode(_ledPin, OUTPUT);//Lampje voor testen
-    Serial.println(F("Accel Gyro calibration will start in 5sec."));
-    Serial.println(F("Please leave the device still on the flat plane."));
+    Serial.println(F("Accel cal starts in 5s"));
+    Serial.println(F("Leave the device on a flat plane"));
     _mpu.verbose(true);
     delay(5000);
     _mpu.calibrateAccelGyro();
 
-    Serial.println(F("Mag calibration will start in 5sec."));
-    Serial.println(F("Please Wave device in a figure eight until done."));
+    Serial.println(F("Mag cal starts in 5s"));
+    Serial.println(F("Wave device in a figure eight until done"));
     digitalWrite(_ledPin, HIGH);//Warns user to wave device in figure 8
     delay(5000);
     _mpu.calibrateMag();
 
-    Serial.println(F("< calibration parameters >"));
+    Serial.println(F("<cal parameters>"));
     Serial.println(F("accel bias [g]: "));
     Serial.print(_mpu.getAccBiasX() * 1000.f / (float)MPU9250::CALIB_ACCEL_SENSITIVITY);
     Serial.print(F(", "));
@@ -68,7 +68,7 @@ void MPUReader::calibrate() {
     
     _mpu.verbose(false);
     digitalWrite(_ledPin, LOW);
-    Serial.println(F("Calibration finished."));
+    Serial.println(F("Cal finished"));
 }
 
 /*Updates and returns the current angle of the MPU.*/

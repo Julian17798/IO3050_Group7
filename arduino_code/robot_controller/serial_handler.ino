@@ -4,6 +4,10 @@ SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_c
 MotorController *mainMotorController;
 PIDController *mainPIDController;
 
+#define invArg F("ERROR INVALID_ARGUMENT")
+#define invNum F("ERROR INVALID_NUMBER")
+#define misArg F("ERROR MISSING_ARGUMENT")
+
 // Serial commands and their input string triggers
 SerialCommand cmdSwitchMode_("!switchMode", cmdSwitchMode);
 SerialCommand cmdSetTimedSpeed_("!timedSpeed", cmdSetTimedSpeed);
@@ -48,10 +52,12 @@ void cmdUnrecognized(SerialCommands* sender, const char* cmd) {
 void cmdSwitchMode(SerialCommands* sender) {
   balanceMode = !balanceMode;
 
+  mainMotorController->setMotorsUntimed(0, 0);
+
   if (balanceMode) {
-    sender->GetSerial()->println(F("Balance mode on."));
+    sender->GetSerial()->println(F("Balance on"));
   } else {
-    sender->GetSerial()->println(F("Balance mode off"));
+    sender->GetSerial()->println(F("Balance off"));
   }
 }
 
@@ -131,7 +137,7 @@ void cmdFlipMotor(SerialCommands* sender) {
 
   // Check whether the int value is valid for this command.
   if (m != 1 && m != 2 && m != 3) {
-    sender->GetSerial()->println(F("ERROR INVALID_NUMBER"));
+    sender->GetSerial()->println(invNum);
     return;
   }
 
@@ -142,7 +148,7 @@ void cmdFlipMotor(SerialCommands* sender) {
     sender->GetSerial()->print(F("Flipped motor "));
     sender->GetSerial()->println(m);
   } else {
-    sender->GetSerial()->println(F("Flipped both motors"));
+    sender->GetSerial()->println(F("Flipped motors"));
   }
 }
 
@@ -165,7 +171,7 @@ void cmdModifyPidConsts(SerialCommands* sender) {
   } else if (strcmp("kd", cStr) == 0) {
     mainPIDController->modifyConstants(mainPIDController->kp, mainPIDController->ki, arg);
   } else {
-    sender->GetSerial()->println(F("ERROR INVALID_ARGUMENT"));
+    sender->GetSerial()->println(invArg);
   }
 }
 
@@ -180,7 +186,7 @@ void cmdSetTarget(SerialCommands* sender) {
   float input = atof(targetStr);
   mainPIDController->targetValue = atof(targetStr);
 
-  sender->GetSerial()->print(F("Changed target value to "));
+  sender->GetSerial()->print(F("Changed target to "));
   sender->GetSerial()->println(input);
 }
 
@@ -189,7 +195,7 @@ void cmdFlipPid(SerialCommands* sender) {
 
   mainPIDController->pidMod *= -1;
 
-  sender->GetSerial()->print(F("Flipped PID signal."));
+  sender->GetSerial()->print(F("Flipped PID"));
 }
 
 /*Prints current PID constants.*/
@@ -223,12 +229,12 @@ bool validateIntInput(SerialCommands* sender, char* strInput) {
 
   // Check if the string is empty.
   if (strInput == NULL) {
-    sender->GetSerial()->println(F("ERROR MISSING_ARGUMENT"));
+    sender->GetSerial()->println(misArg);
     return false;
   }
   // Check if the string is a valid int.
   else if (!isInt(strInput)) {
-    sender->GetSerial()->println(F("ERROR INVALID_ARGUMENT"));
+    sender->GetSerial()->println(invArg);
     return false;
   }
   return true;
@@ -266,12 +272,12 @@ bool validateFloatInput(SerialCommands* sender, char* strInput) {
 
   // Check if the string is empty.
   if (strInput == NULL) {
-    sender->GetSerial()->println(F("ERROR MISSING_ARGUMENT"));
+    sender->GetSerial()->println(misArg);
     return false;
   }
   // Check if the string is a valid int.
   else if (!isFloat(strInput)) {
-    sender->GetSerial()->println(F("ERROR INVALID_ARGUMENT"));
+    sender->GetSerial()->println(invArg);
     return false;
   }
   return true;
@@ -283,7 +289,7 @@ bool checkMode(SerialCommands* sender, bool mode, bool desiredMode) {
     return true;
   }
   else {
-    sender->GetSerial()->println(F("Command rejected. Wrong mode."));
+    sender->GetSerial()->println(F("Rejected. Wrong mode"));
     return false;
   }
 }
