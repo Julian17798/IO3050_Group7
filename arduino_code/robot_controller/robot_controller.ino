@@ -67,7 +67,7 @@ void loop() {
   } 
   else {
     float angle = mpu.updateAngle();
-    angleBuffer.push(0.0);    
+    angleBuffer.push(angle);    
     int pidResult = (int) pid.runCycle(bufferAvg());
   
     motorController.setMotorsUntimed(pidResult, pidResult);
