@@ -72,12 +72,12 @@ void MPUReader::calibrate() {
 }
 
 /*Updates and returns the current angle of the MPU.*/
-float MPUReader::updateAngle() {
+int MPUReader::updateAngle() {
 
   if (_mpu.update()) {
       static uint32_t prev_ms = millis();
       if (millis() > prev_ms + 25) {
-        _currentAngle = _mpu.getPitch();
+        _currentAngle = (int) (_mpu.getPitch() * 100);
           prev_ms = millis();
       }
   }

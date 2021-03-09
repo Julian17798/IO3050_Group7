@@ -10,7 +10,7 @@ class MPUReader {
 
   private:
     int _ledPin;
-    float _currentAngle;
+    int _currentAngle;
     MPU9250 _mpu;
 
     void calibrate(void);
@@ -18,7 +18,7 @@ class MPUReader {
   public:
     MPUReader(int ledPin);
     void mpuSetup(int address);
-    float updateAngle(void);
+    int updateAngle(void);
 
 };
 

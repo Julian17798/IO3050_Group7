@@ -1,6 +1,8 @@
 #include "motor_controller.h"
 #include <CytronMotorDriver.h>
 
+#define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
+
 /*Constructor.*/
 MotorController::MotorController(CytronMD *motor1, CytronMD *motor2, int flipMotor) {
   _motor1 = motor1;
@@ -66,24 +68,13 @@ void MotorController::setMotorsUntimed(int spd1, int spd2) {
 }
 
 /*Flips future motor speeds for a given motor.*/
-void MotorController::flipMotor(int motor) {
-  switch (motor) {
-    
-    case 1:
-      _flipM1 = !_flipM1;
-      break;
-      
-    case 2:
-      _flipM2 = !_flipM2;
-      break;
-
-    case 3:
-      _flipM1 = !_flipM1;
-      _flipM2 = !_flipM2;
-      break;
-      
-    default:
-      break;
-      
+void MotorController::flipMotor(byte motor) {
+  // Check if the bit for 1 is on -> 00000001
+  if (CHECK_BIT(motor, 0)) {
+    _flipM1 = !_flipM1;
+  }
+  // Check if the bit for 2 is on -> 00000010
+  if (CHECK_BIT(motor, 1)) {
+    _flipM2 = !_flipM2;
   }
 }

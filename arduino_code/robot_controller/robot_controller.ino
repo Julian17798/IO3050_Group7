@@ -28,8 +28,8 @@ MPUReader mpu(ledPin);
 PIDController pid(0, 30, 6, 0.17); // <target, kp, ki, kd>
 
 // Initialize Circular Buffer
-#define bufferSize 20
-CircularBuffer<float, bufferSize> angleBuffer;
+#define bufferSize 5
+CircularBuffer<int, bufferSize> angleBuffer;
 
 bool balanceMode = true;
 
@@ -68,11 +68,11 @@ void loop() {
   else {
     float angle = mpu.updateAngle();
     angleBuffer.push(angle);    
-    int pidResult = (int) pid.runCycle(bufferAvg());
+    int pidResult = (int) pid.runCycle(bufferAvg() / 100);
   
     motorController.setMotorsUntimed(pidResult, pidResult);
   
-    Serial.print(angle);
+    Serial.print(bufferAvg() / 100);
     Serial.print(F("\t"));
     Serial.println(pidResult);
   
