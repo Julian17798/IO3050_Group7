@@ -21,18 +21,20 @@ PIDController::PIDController(float target, float kp, float ki, float kd) {
 float PIDController::runCycle(float currentValue) {
 
   // Calculate the time difference between the current update and the last update.
-  float deltaTime = _lastUpdateTime == 0? 1 : (float) (millis() - _lastUpdateTime) / 1000;
+  float deltaTime = _lastUpdateTime == 0 ? 0 : (float) (millis() - _lastUpdateTime) / 1000;
   _lastUpdateTime = millis();
+  Serial.println(deltaTime);
 
   // Calculate the proportional error, the difference between the current error and the previous error and update the total error.
   float error = targetValue - currentValue;
   float deltaError = error - _previousError;
   _totalError += error * deltaTime;
+  _totalError = constrain(_totalError, -300, 300);
 
   // Standard PID calculations.
   float feedP = error * kp;
   float feedI = _totalError * ki;
-  float feedD = deltaError / deltaTime * kd;
+  float feedD = deltaTime == 0 ? 0 : deltaError / deltaTime * kd;
 
   // Replace the previous error with the current error.
   _previousError = error;

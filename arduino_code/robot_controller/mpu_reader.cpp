@@ -88,7 +88,3 @@ int MPUReader::updateAngle() {
 
   return _currentAngle;
 }
-
-float MPUReader::getAngleAcc() {
-  return _mpu.getLinearAccZ();
-}
