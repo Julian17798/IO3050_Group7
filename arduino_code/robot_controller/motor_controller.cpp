@@ -1,7 +1,7 @@
 #include "motor_controller.h"
 #include <CytronMotorDriver.h>
 
-#define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
+#define CHECK_BIT(var, pos) ((var) & (1<<(pos)))
 
 /*Constructor.*/
 MotorController::MotorController(CytronMD *motor1, CytronMD *motor2, int flipMotor) {

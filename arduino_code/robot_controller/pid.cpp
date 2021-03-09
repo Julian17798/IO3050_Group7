@@ -6,7 +6,7 @@ PIDController::PIDController(float target, float kp, float ki, float kd) {
 
   _totalError = 0;
   _previousError = 0;
-  _lastUpdateTime = millis();
+  _lastUpdateTime = 0;
   printValues = true;
   pidMod = 1;
 
@@ -21,7 +21,7 @@ PIDController::PIDController(float target, float kp, float ki, float kd) {
 float PIDController::runCycle(float currentValue) {
 
   // Calculate the time difference between the current update and the last update.
-  float deltaTime = (float) (millis() - _lastUpdateTime) / 1000;
+  float deltaTime = _lastUpdateTime == 0? 1 : (float) (millis() - _lastUpdateTime) / 1000;
   _lastUpdateTime = millis();
 
   // Calculate the proportional error, the difference between the current error and the previous error and update the total error.
@@ -54,7 +54,7 @@ void PIDController::modifyConstants(float kp, float ki, float kd) {
   this->ki = ki;
   this->kd = kd;
 
-  Serial.print(F("PID constants modified: kp = "));
+  Serial.print(F("PID modified: kp = "));
   Serial.print(kp);
   Serial.print(F(", ki = "));
   Serial.print(ki);

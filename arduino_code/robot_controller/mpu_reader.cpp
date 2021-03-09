@@ -5,6 +5,7 @@
 /*Constructor.*/
 MPUReader::MPUReader(int ledPin): _mpu() {
   _ledPin = ledPin;
+  _lastUpdateTime = 0;
 }
 
 /*MPU setup method. Connects with the MPU at a given address.*/
@@ -17,7 +18,7 @@ void MPUReader::mpuSetup(int address) {
     }
   }
 
-  calibrate();
+//  calibrate();
 }
 
 /*Handles the calibration of the MPU.*/
@@ -74,12 +75,20 @@ void MPUReader::calibrate() {
 /*Updates and returns the current angle of the MPU.*/
 int MPUReader::updateAngle() {
 
-  if (_mpu.update()) {
-      static uint32_t prev_ms = millis();
-      if (millis() > prev_ms + 25) {
-        _currentAngle = (int) (_mpu.getPitch() * 100);
-          prev_ms = millis();
-      }
-  }
+  unsigned long curTime = millis();
+  float deltaTime = curTime - _lastUpdateTime;
+  _lastUpdateTime = curTime;
+
+  _mpu.update();
+
+  float gyroY = -_mpu.getGyroY();
+  float accAngle = atan2(_mpu.getAccX(), _mpu.getAccZ()) * RAD_TO_DEG;
+  float angle = 0.99 * ((float) _currentAngle / 100 + gyroY * deltaTime / 1000) + 0.01 * (accAngle);
+  _currentAngle = (int) (angle * 100);
+
   return _currentAngle;
+}
+
+float MPUReader::getAngleAcc() {
+  return _mpu.getLinearAccZ();
 }

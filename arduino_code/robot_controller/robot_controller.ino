@@ -25,7 +25,7 @@ MotorController motorController(&motor1, &motor2, 2);
 MPUReader mpu(ledPin);
 
 // Initialize PID Controller.
-PIDController pid(0, 30, 6, 0.17); // <target, kp, ki, kd>
+PIDController pid(0, 10, 6, 0.17); // <target, kp, ki, kd>
 
 // Initialize Circular Buffer
 #define bufferSize 5
@@ -43,8 +43,8 @@ void setup() {
 
   delay(2000);
 
-  // Setup our custom serial commands and pass a pointer to the motor controller (required to allow the serial commands to access the controller from another ino file).
-  setupSerialCommands(&motorController, &pid);
+  // Setup our custom serial commands.
+  setupSerialCommands();
   
   delay(2000);
 
@@ -66,13 +66,13 @@ void loop() {
     motorController.handleMotors();
   } 
   else {
-    float angle = mpu.updateAngle();
+    int angle = mpu.updateAngle();
     angleBuffer.push(angle);    
-    int pidResult = (int) pid.runCycle(bufferAvg() / 100);
+    int pidResult = (int) pid.runCycle(bufferAvgAngle());
   
     motorController.setMotorsUntimed(pidResult, pidResult);
   
-    Serial.print(bufferAvg() / 100);
+    Serial.print(bufferAvgAngle());
     Serial.print(F("\t"));
     Serial.println(pidResult);
   
@@ -81,10 +81,10 @@ void loop() {
 }
 
 /*Returns the average of the buffer.*/
-float bufferAvg(){
+float bufferAvgAngle(){
   float sum = 0;
   for (int i = 0; i < bufferSize; i++){
     sum += angleBuffer[i];
   }
-  return sum / bufferSize;
+  return sum / bufferSize / 100;
 }

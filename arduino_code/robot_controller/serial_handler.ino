@@ -1,8 +1,8 @@
 // Serial Commands setup
 char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
-MotorController *mainMotorController;
-PIDController *mainPIDController;
+extern MotorController motorController;
+extern PIDController pid;
 
 #define invArg F("ERROR INVALID_ARGUMENT")
 #define invNum F("ERROR INVALID_NUMBER")
@@ -20,10 +20,7 @@ SerialCommand cmdFlipPid_("!flipPid", cmdFlipPid);
 SerialCommand cmdGetPid_("!getPid", cmdGetPid);
 
 /*Sets up all of our custom serial commands.*/
-void setupSerialCommands(MotorController *mCtrl, PIDController *pCtrl) { 
-  mainMotorController = mCtrl;
-  mainPIDController = pCtrl;
-  
+void setupSerialCommands() {   
   serial_commands_.SetDefaultHandler(cmdUnrecognized);
   serial_commands_.AddCommand(&cmdSwitchMode_);
   serial_commands_.AddCommand(&cmdSetTimedSpeed_);
@@ -52,7 +49,7 @@ void cmdUnrecognized(SerialCommands* sender, const char* cmd) {
 void cmdSwitchMode(SerialCommands* sender) {
   balanceMode = !balanceMode;
 
-  mainMotorController->setMotorsUntimed(0, 0);
+  motorController.setMotorsUntimed(0, 0);
 
   if (balanceMode) {
     sender->GetSerial()->println(F("Balance on"));
@@ -81,7 +78,7 @@ void cmdSetTimedSpeed(SerialCommands* sender) {
   int duration = atoi(timeStr);
 
   // Activate the motors at the given speeds for a given amount of time.
-  mainMotorController->setMotorsTimed(spd1, spd2, duration);  
+  motorController.setMotorsTimed(spd1, spd2, duration);  
 
   sender->GetSerial()->print(F("Set timed speed. Motor 1 spd: "));
   sender->GetSerial()->print(spd1);
@@ -107,7 +104,7 @@ void cmdSetUntimedSpeed(SerialCommands* sender) {
   int spd2 = atoi(spd2Str);
 
   // Activate the motors at the given speeds.
-  mainMotorController->setMotorsUntimed(spd1, spd2);
+  motorController.setMotorsUntimed(spd1, spd2);
 
   sender->GetSerial()->print(F("Set untimed speed. Motor 1 spd: "));
   sender->GetSerial()->print(spd1);
@@ -120,7 +117,7 @@ void cmdStop(SerialCommands* sender) {
   if (!checkMode(sender, balanceMode, false)) { return; }
 
   // Stop motors and timer
-  mainMotorController->setMotorsUntimed(0, 0);
+  motorController.setMotorsUntimed(0, 0);
 
   sender->GetSerial()->println(F("Stopped motors"));
 }
@@ -142,7 +139,7 @@ void cmdFlipMotor(SerialCommands* sender) {
   }
 
   // Flip future motor inputs.
-  mainMotorController->flipMotor(m);
+  motorController.flipMotor(m);
 
   if (m != 3) {
     sender->GetSerial()->print(F("Flipped motor "));
@@ -165,11 +162,11 @@ void cmdModifyPidConsts(SerialCommands* sender) {
 
   // Modify the right constant.
   if (strcmp("kp", cStr) == 0) {
-    mainPIDController->modifyConstants(arg, mainPIDController->ki, mainPIDController->kd);
+    pid.modifyConstants(arg, pid.ki, pid.kd);
   } else if (strcmp("ki", cStr) == 0) {
-    mainPIDController->modifyConstants(mainPIDController->kp, arg, mainPIDController->kd);
+    pid.modifyConstants(pid.kp, arg, pid.kd);
   } else if (strcmp("kd", cStr) == 0) {
-    mainPIDController->modifyConstants(mainPIDController->kp, mainPIDController->ki, arg);
+    pid.modifyConstants(pid.kp, pid.ki, arg);
   } else {
     sender->GetSerial()->println(invArg);
   }
@@ -184,7 +181,7 @@ void cmdSetTarget(SerialCommands* sender) {
 
   // Set the target value of the pid.
   float input = atof(targetStr);
-  mainPIDController->targetValue = atof(targetStr);
+  pid.targetValue = atof(targetStr);
 
   sender->GetSerial()->print(F("Changed target to "));
   sender->GetSerial()->println(input);
@@ -193,7 +190,7 @@ void cmdSetTarget(SerialCommands* sender) {
 /*Flips PID signal.*/
 void cmdFlipPid(SerialCommands* sender) {
 
-  mainPIDController->pidMod *= -1;
+  pid.pidMod *= -1;
 
   sender->GetSerial()->print(F("Flipped PID"));
 }
@@ -202,11 +199,11 @@ void cmdFlipPid(SerialCommands* sender) {
 void cmdGetPid(SerialCommands* sender) {
 
   sender->GetSerial()->print(F("kp = "));
-  sender->GetSerial()->print(mainPIDController->kp);
+  sender->GetSerial()->print(pid.kp);
   sender->GetSerial()->print(F(", ki = "));
-  sender->GetSerial()->print(mainPIDController->ki);
+  sender->GetSerial()->print(pid.ki);
   sender->GetSerial()->print(F(", kd = "));
-  sender->GetSerial()->println(mainPIDController->kd);
+  sender->GetSerial()->println(pid.kd);
 }
 
 /*Checks whether the input string is an integer number.*/
