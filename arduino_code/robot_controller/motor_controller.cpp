@@ -28,13 +28,13 @@ void MotorController::handleMotors() {
 
 /*Sets the speeds of the motors to the given inputs.*/
 void MotorController::setMotorSpeeds(int spd1, int spd2) {
-//  if (spd1 > -50 && spd1 < 50) {
-//    spd1 = 0;
-//  }
-//
-//  if (spd2 > -50 && spd2 < 50) {
-//    spd2 = 0;
-//  }
+  if (spd1 > -50 && spd1 < 50) {
+    spd1 = 0;
+  }
+
+  if (spd2 > -50 && spd2 < 50) {
+    spd2 = 0;
+  }
 
   // Constrain the input to -255 - 255.
   spd1 = constrain(spd1, -255, 255);
