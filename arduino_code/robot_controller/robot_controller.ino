@@ -25,13 +25,20 @@ MotorController motorController(&motor1, &motor2, 2);
 MPUReader mpu(ledPin);
 
 // Initialize PID Controller.
-PIDController pid(0, 10, 4, 0.17); // <target, kp, ki, kd>
+PIDController pid(0, 10, 2, 0.17); // <target, kp, ki, kd>
+PIDController targetPid(0, 0.001, 0, 0.0001);
+
+long mileage = 0;
 
 // Initialize Circular Buffer
 #define bufferSize 1
 CircularBuffer<int, bufferSize> angleBuffer;
+CircularBuffer<int, 50> mileageBuffer;
 
 bool balanceMode = true;
+
+float target = 0.0;
+float offset = 0.0;
 
 void setup() {
   Serial.begin(38400);
@@ -52,8 +59,12 @@ void setup() {
   delay(1000);
   motorController.setMotorsUntimed(0, 0);
 
-  for (int i = 0; i < bufferSize; i++){
+  for (int i = 0; i < angleBuffer.size(); i++){
     angleBuffer.push(0.0);
+  }
+
+  for (int i = 0; i < mileageBuffer.size(); i++){
+    angleBuffer.push(0);
   }
 
   unsigned long startTime = millis();
@@ -62,6 +73,10 @@ void setup() {
     angleBuffer.push(angle);    
     Serial.println(bufferAvgAngle());
   }
+
+  target = bufferAvgAngle();
+
+  pid.printValues = false;
 
   Serial.println(F("*START*"));
 }
@@ -76,12 +91,22 @@ void loop() {
     int angle = mpu.updateAngle();
     angleBuffer.push(angle);    
     int pidResult = (int) pid.runCycle(bufferAvgAngle());
+    mileageBuffer.push(constrain(pidResult, -255, 255));
   
     motorController.setMotorsUntimed(pidResult, pidResult);
+    
+    offset += targetPid.runCycle(-mileageAvg());
+    float targetVal = target + offset;
+    pid.targetValue = constrain(targetVal, target - 20, target + 20);
   
     Serial.print(bufferAvgAngle());
     Serial.print(F("\t"));
-    Serial.println(pidResult);
+    Serial.print(pidResult);
+    Serial.print(F("\t"));
+    Serial.print(-mileageAvg());
+    Serial.print(F("\t"));
+    Serial.println(pid.targetValue);
+    
   
     delay(20);
   }
@@ -90,8 +115,18 @@ void loop() {
 /*Returns the average of the buffer.*/
 float bufferAvgAngle(){
   float sum = 0;
-  for (int i = 0; i < bufferSize; i++){
+  int bSize = angleBuffer.size();
+  for (int i = 0; i < bSize; i++){
     sum += angleBuffer[i];
   }
-  return sum / bufferSize / 100;
+  return sum / bSize / 100;
+}
+
+int mileageAvg(){
+  int sum = 0;
+  int bSize = mileageBuffer.size();
+  for (int i = 0; i < bSize; i++) {
+    sum += mileageBuffer[i];
+  }
+  return sum / bSize;
 }

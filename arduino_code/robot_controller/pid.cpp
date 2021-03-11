@@ -23,7 +23,6 @@ float PIDController::runCycle(float currentValue) {
   // Calculate the time difference between the current update and the last update.
   float deltaTime = _lastUpdateTime == 0 ? 0 : (float) (millis() - _lastUpdateTime) / 1000;
   _lastUpdateTime = millis();
-  Serial.println(deltaTime);
 
   // Calculate the proportional error, the difference between the current error and the previous error and update the total error.
   float error = targetValue - currentValue;

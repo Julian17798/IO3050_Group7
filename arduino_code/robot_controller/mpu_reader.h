@@ -14,8 +14,6 @@ class MPUReader {
     unsigned long _lastUpdateTime;
     MPU9250 _mpu;
 
-    void calibrate(void);
-
   public:
     MPUReader(int ledPin);
     void mpuSetup(int address);
