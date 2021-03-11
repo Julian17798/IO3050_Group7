@@ -19,7 +19,6 @@ class MPUReader {
     MPUReader(int ledPin);
     void mpuSetup(int address);
     float updateAngle(void);
-    bool mpuSetupComplete;
 
 };
 
