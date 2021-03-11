@@ -25,12 +25,11 @@ MotorController motorController(&motor1, &motor2, 2);
 MPUReader mpu(ledPin);
 
 // Initialize PID Controller.
-PIDController pid(0, 10, 2, 0.17); // <target, kp, ki, kd>
-PIDController targetPid(0, 0.000009, 0, 0.000001);
+PIDController pid(0, 10, 3, 0.17); // <target, kp, ki, kd>
+PIDController targetPid(0, 0.000015, 0, 0.00001);
 
 // Initialize Circular Buffer
-#define bufferSize 1
-CircularBuffer<int, bufferSize> angleBuffer;
+CircularBuffer<int, 3> angleBuffer;
 CircularBuffer<int, 50> mileageBuffer;
 
 bool balanceMode = true;
@@ -69,12 +68,13 @@ void setup() {
   while (startTime + 5000 > millis()){
     int angle = mpu.updateAngle();
     angleBuffer.push(angle);    
-    Serial.println(bufferAvgAngle());
+//    Serial.println(bufferAvgAngle());
   }
 
   target = bufferAvgAngle();
 
   pid.printValues = false;
+  targetPid.printValues = false;
 
   Serial.println(F("*START*"));
 }
@@ -89,20 +89,25 @@ void loop() {
     int angle = mpu.updateAngle();
     angleBuffer.push(angle);    
     int pidResult = (int) pid.runCycle(bufferAvgAngle());
-    mileageBuffer.push(constrain(pidResult, -255, 255));
   
     motorController.setMotorsUntimed(pidResult, pidResult);
+
+    int mileageInput = pidResult;
+    if (mileageInput > -50 && mileageInput < 50) {
+      mileageInput = 0;
+    }
+    mileageBuffer.push(constrain(mileageInput, -255, 255));
     
     offset += targetPid.runCycle(-mileageSum());
-    float targetVal = target + offset;
-    pid.targetValue = constrain(targetVal, target - 20, target + 20);
+    offset = constrain(offset, -20, 20);
+    pid.targetValue = target + offset;
   
     Serial.print(bufferAvgAngle());
     Serial.print(F("\t"));
-    Serial.print(pidResult);
-    Serial.print(F("\t"));
-    Serial.print(-mileageSum());
-    Serial.print(F("\t"));
+//    Serial.print(pidResult);
+//    Serial.print(F("\t"));
+//    Serial.print(-mileageSum());
+//    Serial.print(F("\t"));
     Serial.println(pid.targetValue);
     
   
