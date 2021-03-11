@@ -5,11 +5,11 @@
 /*Constructor.*/
 MPUReader::MPUReader(int ledPin): _mpu() {
   _ledPin = ledPin;
+  mpuSetupComplete = false;
 }
 
 /*MPU setup method. Connects with the MPU at a given address.*/
 void MPUReader::mpuSetup(int address) {
-
   if (!_mpu.setup(address)) {
     while (1) {
       Serial.println(F("MPU connection failed. Please check your connection with `connection_check` example."));
@@ -18,6 +18,7 @@ void MPUReader::mpuSetup(int address) {
   }
 
   calibrate();
+  mpuSetupComplete = true;
 }
 
 /*Handles the calibration of the MPU.*/

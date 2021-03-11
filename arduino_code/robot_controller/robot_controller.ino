@@ -3,6 +3,7 @@
 #include "pid.h"
 #include "mpu_reader.h"
 #include "motor_controller.h"
+#include <ChainableLED.h>
 
 // Define motor pins.
 #define pwm1a 3
@@ -22,27 +23,40 @@ MotorController motorController(&motor1, &motor2, 2);
 MPUReader mpu(ledPin);
 
 // Initialize PID Controller.
-PIDController pid(0, 91.9, 420.4, 5.0, 244.8);
+PIDController pid(0, 5, 0.1, 1, 244.8);
+
+// Initialize LED.
+#define NUM_LEDS  1
+ChainableLED leds(7, 8, NUM_LEDS);
 
 bool balanceMode = false;
 
 void setup() {
   Serial.begin(115200);
   Wire.begin();
+  leds.init();
+  delay(50);
+  leds.setColorRGB(0, 255, 255, 255);
   delay(2000);
 
   // Setup the MPU reader.
+  leds.setColorRGB(0, 255, 0, 0);
   mpu.mpuSetup(0x68);
+  leds.setColorRGB(0, 0, 0, 255);
+
+  if (!mpu.mpuSetupComplete) leds.setColorRGB(0, 255, 0, 0);
 
   // Setup our custom serial commands and pass a pointer to the motor controller (required to allow the serial commands to access the controller from another ino file).
+  leds.setColorRGB(0, 127, 0, 255);
   setupSerialCommands(&motorController, &pid);
   
   delay(1000);
-
+  leds.setColorRGB(0, 255, 127, 0);
   motorController.setMotorsUntimed(100, 100);
   delay(1000);
   motorController.setMotorsUntimed(0, 0);
 
+  leds.setColorRGB(0, 0, 255, 0);
   Serial.println(F("*** START ***"));
 }
 
