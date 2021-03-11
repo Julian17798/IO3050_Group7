@@ -26,9 +26,7 @@ MPUReader mpu(ledPin);
 
 // Initialize PID Controller.
 PIDController pid(0, 10, 2, 0.17); // <target, kp, ki, kd>
-PIDController targetPid(0, 0.001, 0, 0.0001);
-
-long mileage = 0;
+PIDController targetPid(0, 0.000009, 0, 0.000001);
 
 // Initialize Circular Buffer
 #define bufferSize 1
@@ -95,7 +93,7 @@ void loop() {
   
     motorController.setMotorsUntimed(pidResult, pidResult);
     
-    offset += targetPid.runCycle(-mileageAvg());
+    offset += targetPid.runCycle(-mileageSum());
     float targetVal = target + offset;
     pid.targetValue = constrain(targetVal, target - 20, target + 20);
   
@@ -103,7 +101,7 @@ void loop() {
     Serial.print(F("\t"));
     Serial.print(pidResult);
     Serial.print(F("\t"));
-    Serial.print(-mileageAvg());
+    Serial.print(-mileageSum());
     Serial.print(F("\t"));
     Serial.println(pid.targetValue);
     
@@ -122,11 +120,11 @@ float bufferAvgAngle(){
   return sum / bSize / 100;
 }
 
-int mileageAvg(){
+int mileageSum(){
   int sum = 0;
   int bSize = mileageBuffer.size();
   for (int i = 0; i < bSize; i++) {
     sum += mileageBuffer[i];
   }
-  return sum / bSize;
+  return sum;
 }
