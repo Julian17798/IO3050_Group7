@@ -5,7 +5,7 @@
 #include "mpu_reader.h"
 #include "motor_controller.h"
 
-/*This project requires the SerialCommands library by Pedro Tiago Pereira.*/
+/*This project requires the SerialCommands library by Pedro Tiago Pereira and the CircularBuffer library by AgileWare.*/
 
 // Define motor pins.
 #define pwm1a 3
@@ -29,8 +29,10 @@ PIDController pid(0, 10, 3, 0.17); // <target, kp, ki, kd>
 PIDController targetPid(0, 0.000015, 0, 0.00001);
 
 // Initialize Circular Buffer
-CircularBuffer<int, 3> angleBuffer;
-CircularBuffer<int, 50> mileageBuffer;
+#define angleBufferSize 3
+CircularBuffer<int, angleBufferSize> angleBuffer;
+#define mileageBufferSize 50
+CircularBuffer<int, mileageBufferSize> mileageBuffer;
 
 bool balanceMode = true;
 
@@ -47,34 +49,24 @@ void setup() {
 
   delay(2000);
 
-  // Setup our custom serial commands.
+  // Setup custom serial commands.
   setupSerialCommands();
   
   delay(2000);
 
+  // Turn on the motors for one second.
   motorController.setMotorsUntimed(100, 100);
+  
   delay(1000);
+  
   motorController.setMotorsUntimed(0, 0);
 
-  for (int i = 0; i < angleBuffer.size(); i++){
-    angleBuffer.push(0.0);
-  }
+  // Fill the buffers with 0.
+  fillBuffer(angleBuffer, 0, true);
+  fillBuffer(mileageBuffer, 0, true);
 
-  for (int i = 0; i < mileageBuffer.size(); i++){
-    angleBuffer.push(0);
-  }
-
-  unsigned long startTime = millis();
-  while (startTime + 5000 > millis()){
-    int angle = mpu.updateAngle();
-    angleBuffer.push(angle);    
-//    Serial.println(bufferAvgAngle());
-  }
-
-  target = bufferAvgAngle();
-
-  pid.printValues = false;
-  targetPid.printValues = false;
+  // Calibrate the angle for 5000 ms.
+  calibrateAngle(5000);
 
   Serial.println(F("*START*"));
 }
@@ -88,7 +80,7 @@ void loop() {
   else {
     int angle = mpu.updateAngle();
     angleBuffer.push(angle);    
-    int pidResult = (int) pid.runCycle(bufferAvgAngle());
+    int pidResult = (int) pid.runCycle(bufferAverage(angleBuffer));
   
     motorController.setMotorsUntimed(pidResult, pidResult);
 
@@ -98,38 +90,62 @@ void loop() {
     }
     mileageBuffer.push(constrain(mileageInput, -255, 255));
     
-    offset += targetPid.runCycle(-mileageSum());
+    offset += targetPid.runCycle(-bufferSum(mileageBuffer));
     offset = constrain(offset, -20, 20);
     pid.targetValue = target + offset;
   
-    Serial.print(bufferAvgAngle());
+    Serial.print(bufferAverage(angleBuffer));
     Serial.print(F("\t"));
 //    Serial.print(pidResult);
 //    Serial.print(F("\t"));
 //    Serial.print(-mileageSum());
 //    Serial.print(F("\t"));
-    Serial.println(pid.targetValue);
-    
+    Serial.println(pid.targetValue);    
   
     delay(20);
   }
 }
 
-/*Returns the average of the buffer.*/
-float bufferAvgAngle(){
-  float sum = 0;
-  int bSize = angleBuffer.size();
-  for (int i = 0; i < bSize; i++){
-    sum += angleBuffer[i];
+/*Fills a given int buffer with the given int number.*/
+template<size_t S>
+void fillBuffer(CircularBuffer<int, S> &cb, int filler, bool completeFill) {
+  if (!completeFill) {
+    while (!cb.isFull()){
+      cb.push(filler);
+    }
+  } 
+  else {
+    for (int i = 0; i < cb.size(); i++) {
+      cb.push(filler);
+    }
   }
-  return sum / bSize / 100;
 }
 
-int mileageSum(){
+/*Returns the sum of an int buffer.*/
+template<size_t S>
+int bufferSum(CircularBuffer<int, S> &cb) {
   int sum = 0;
-  int bSize = mileageBuffer.size();
-  for (int i = 0; i < bSize; i++) {
-    sum += mileageBuffer[i];
+  for (int i = 0; i < cb.size(); i++) {
+    sum += cb[i];
   }
   return sum;
+}
+
+/*Returns the float average of an int buffer.*/
+template<size_t S>
+float bufferAverage(CircularBuffer<int, S> &cb) {
+  int sum = bufferSum(cb);
+  return (float) sum / cb.size();
+}
+
+/*Calibrates the mpu angle for a given amount of time.*/
+void calibrateAngle(int calibrationTime) {
+  unsigned long startTime = millis();
+  while (startTime + calibrationTime > millis()){
+    int angle = mpu.updateAngle();
+    angleBuffer.push(angle);    
+  }
+
+  target = bufferAverage(angleBuffer);
+  offset = 0.0;
 }

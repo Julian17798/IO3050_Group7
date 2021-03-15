@@ -3,6 +3,9 @@ char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
 extern MotorController motorController;
 extern PIDController pid;
+extern PIDController targetPid;
+extern CircularBuffer<int, angleBufferSize> angleBuffer;
+extern CircularBuffer<int, mileageBufferSize> mileageBuffer;
 
 #define invArg F("ERROR INVALID_ARGUMENT")
 #define invNum F("ERROR INVALID_NUMBER")
@@ -18,6 +21,7 @@ SerialCommand cmdModifyPidConsts_("!pid", cmdModifyPidConsts);
 SerialCommand cmdSetTarget_("!target", cmdSetTarget);
 SerialCommand cmdFlipPid_("!flipPid", cmdFlipPid);
 SerialCommand cmdGetPid_("!getPid", cmdGetPid);
+SerialCommand cmdReset_("!reset", cmdReset);
 
 /*Sets up all of our custom serial commands.*/
 void setupSerialCommands() {   
@@ -31,6 +35,7 @@ void setupSerialCommands() {
   serial_commands_.AddCommand(&cmdSetTarget_);
   serial_commands_.AddCommand(&cmdFlipPid_);
   serial_commands_.AddCommand(&cmdGetPid_);
+  serial_commands_.AddCommand(&cmdReset_);
 }
 
 /*Reads the serial input and calls the relevant commands.*/
@@ -129,7 +134,7 @@ void cmdFlipMotor(SerialCommands* sender) {
   char* mStr = sender->Next();
   if (!validateIntInput(sender, mStr)) { return; }
 
-  // Turn string argument into
+  // Turn string argument into int
   int m = atoi(mStr);
 
   // Check whether the int value is valid for this command.
@@ -204,6 +209,24 @@ void cmdGetPid(SerialCommands* sender) {
   sender->GetSerial()->print(pid.ki);
   sender->GetSerial()->print(F(", kd = "));
   sender->GetSerial()->println(pid.kd);
+}
+
+/*Resets the pids, the motors and the angle.*/
+void cmdReset(SerialCommands* sender) {
+
+  // Reset the pid controllers.
+  pid.reset();
+  targetPid.reset();
+
+  // Turn off the motors.
+  motorController.setMotorsUntimed(0, 0);
+
+  // Recalibrate the angle.
+  calibrateAngle(5000);
+
+  // Refill the buffers with 0.
+  fillBuffer(angleBuffer, 0, true);
+  fillBuffer(mileageBuffer, 0, true);  
 }
 
 /*Checks whether the input string is an integer number.*/

@@ -20,6 +20,7 @@ class PIDController {
     PIDController(float target, float kp, float ki, float kd);
     float runCycle(float currentValue);
     void modifyConstants(float kp, float ki, float kd);
+    void reset(void);
 
 };
 
