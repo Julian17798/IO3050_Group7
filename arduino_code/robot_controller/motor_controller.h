@@ -23,7 +23,7 @@ class MotorController {
     void handleMotors(void);
     void setMotorsTimed(int spd1, int spd2, int duration);
     void setMotorsUntimed(int spd1, int spd2);
-    void flipMotor(int motor);
+    void flipMotor(byte motor);
 
 };
 

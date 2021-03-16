@@ -5,6 +5,7 @@
 /*Constructor.*/
 MPUReader::MPUReader(int ledPin): _mpu() {
   _ledPin = ledPin;
+  _lastUpdateTime = 0;
 }
 
 /*MPU setup method. Connects with the MPU at a given address.*/
@@ -16,70 +17,21 @@ void MPUReader::mpuSetup(int address) {
       delay(5000);
     }
   }
-
-  calibrate();
-}
-
-/*Handles the calibration of the MPU.*/
-void MPUReader::calibrate() {
-  //Calibration acivation
-    pinMode(_ledPin, OUTPUT);//Lampje voor testen
-    Serial.println(F("Accel Gyro calibration will start in 5sec."));
-    Serial.println(F("Please leave the device still on the flat plane."));
-    _mpu.verbose(true);
-    delay(5000);
-    _mpu.calibrateAccelGyro();
-
-    Serial.println(F("Mag calibration will start in 5sec."));
-    Serial.println(F("Please Wave device in a figure eight until done."));
-    digitalWrite(_ledPin, HIGH);//Warns user to wave device in figure 8
-    delay(5000);
-    _mpu.calibrateMag();
-
-    Serial.println(F("< calibration parameters >"));
-    Serial.println(F("accel bias [g]: "));
-    Serial.print(_mpu.getAccBiasX() * 1000.f / (float)MPU9250::CALIB_ACCEL_SENSITIVITY);
-    Serial.print(F(", "));
-    Serial.print(_mpu.getAccBiasY() * 1000.f / (float)MPU9250::CALIB_ACCEL_SENSITIVITY);
-    Serial.print(F(", "));
-    Serial.print(_mpu.getAccBiasZ() * 1000.f / (float)MPU9250::CALIB_ACCEL_SENSITIVITY);
-    Serial.println();
-    Serial.println(F("gyro bias [deg/s]: "));
-    Serial.print(_mpu.getGyroBiasX() / (float)MPU9250::CALIB_GYRO_SENSITIVITY);
-    Serial.print(F(", "));
-    Serial.print(_mpu.getGyroBiasY() / (float)MPU9250::CALIB_GYRO_SENSITIVITY);
-    Serial.print(F(", "));
-    Serial.print(_mpu.getGyroBiasZ() / (float)MPU9250::CALIB_GYRO_SENSITIVITY);
-    Serial.println();
-    Serial.println(F("mag bias [mG]: "));
-    Serial.print(_mpu.getMagBiasX());
-    Serial.print(F(", "));
-    Serial.print(_mpu.getMagBiasY());
-    Serial.print(F(", "));
-    Serial.print(_mpu.getMagBiasZ());
-    Serial.println();
-    Serial.println(F("mag scale []: "));
-    Serial.print(_mpu.getMagScaleX());
-    Serial.print(F(", "));
-    Serial.print(_mpu.getMagScaleY());
-    Serial.print(F(", "));
-    Serial.print(_mpu.getMagScaleZ());
-    Serial.println();
-    
-    _mpu.verbose(false);
-    digitalWrite(_ledPin, LOW);
-    Serial.println(F("Calibration finished."));
 }
 
 /*Updates and returns the current angle of the MPU.*/
-float MPUReader::updateAngle() {
+int MPUReader::updateAngle() {
 
-  if (_mpu.update()) {
-      static uint32_t prev_ms = millis();
-      if (millis() > prev_ms + 25) {
-        _currentAngle = _mpu.getPitch();
-          prev_ms = millis();
-      }
-  }
+  unsigned long curTime = millis();
+  float deltaTime = curTime - _lastUpdateTime;
+  _lastUpdateTime = curTime;
+
+  _mpu.update();
+
+  float gyroY = -_mpu.getGyroY();
+  float accAngle = atan2(_mpu.getAccX(), _mpu.getAccZ()) * RAD_TO_DEG;
+  float angle = 0.99 * ((float) _currentAngle / 100 + gyroY * deltaTime / 1000) + 0.01 * (accAngle);
+  _currentAngle = (int) (angle * 100);
+
   return _currentAngle;
 }
