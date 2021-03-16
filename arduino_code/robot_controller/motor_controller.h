@@ -14,15 +14,19 @@ class MotorController {
     bool _flipM1, _flipM2;
     bool _timerActive;
     unsigned long _timerTarget;
+    int _lastSpd1, _lastSpd2;
+    int _lastManualSpd1, _lastManualSpd2;
 
-    void setMotorSpeeds(int spd1, int spd2);
+    void setMotorSpeeds(int spd1, int spd2, bool manual);
     void activateTimer(int duration);
 
   public:
-    MotorController(CytronMD *motor1, CytronMD *motor2, int flipMotor);
+    int minSignal;
+  
+    MotorController(CytronMD *motor1, CytronMD *motor2, int flipMotor, int minSignal);
     void handleMotors(void);
-    void setMotorsTimed(int spd1, int spd2, int duration);
-    void setMotorsUntimed(int spd1, int spd2);
+    void setMotorsTimed(int spd1, int spd2, int duration, bool manual);
+    void setMotorsUntimed(int spd1, int spd2, bool manual);
     void flipMotor(byte motor);
 
 };

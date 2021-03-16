@@ -18,26 +18,29 @@ CytronMD motor1(PWM_PWM, pwm1a, pwm1b);
 CytronMD motor2(PWM_PWM, pwm2a, pwm2b);
 
 // Initialize motor controller and pass pointers to the motor drivers.
-MotorController motorController(&motor1, &motor2, 2);
+MotorController motorController(&motor1, &motor2, 2, 50);
 
 // Initialize MPU Reader
-#define ledPin 7
-MPUReader mpu(ledPin);
+MPUReader mpu;
 
 // Initialize PID Controller.
 PIDController pid(0, 10, 3, 0.17); // <target, kp, ki, kd>
 PIDController targetPid(0, 0.000015, 0, 0.00001);
 
-// Initialize Circular Buffer
+// Initialize Circular Buffers
 #define angleBufferSize 3
 CircularBuffer<int, angleBufferSize> angleBuffer;
 #define mileageBufferSize 50
 CircularBuffer<int, mileageBufferSize> mileageBuffer;
 
+#define motorUpdateInterval 20
+
 bool balanceMode = true;
 
 float target = 0.0;
 float offset = 0.0;
+
+unsigned long lastMotorUpdateTime = 0;
 
 void setup() {
   Serial.begin(38400);
@@ -51,15 +54,15 @@ void setup() {
 
   // Setup custom serial commands.
   setupSerialCommands();
-  
+
   delay(2000);
 
   // Turn on the motors for one second.
-  motorController.setMotorsUntimed(100, 100);
-  
+  motorController.setMotorsUntimed(100, 100, false);
+
   delay(1000);
-  
-  motorController.setMotorsUntimed(0, 0);
+
+  motorController.setMotorsUntimed(0, 0, false);
 
   // Fill the buffers with 0.
   fillBuffer(angleBuffer, 0, true);
@@ -71,49 +74,55 @@ void setup() {
   Serial.println(F("*START*"));
 }
 
-void loop() {  
+void loop() {
   handleSerial();
-  
+  handleMotors();
+}
+
+void handleMotors() {
+  if (millis() < lastMotorUpdateTime + motorUpdateInterval) return;
+
   if (!balanceMode) {
     motorController.handleMotors();
-  } 
+  }
   else {
     int angle = mpu.updateAngle();
-    angleBuffer.push(angle);    
-    int pidResult = (int) pid.runCycle(bufferAverage(angleBuffer));
-  
-    motorController.setMotorsUntimed(pidResult, pidResult);
-
-    int mileageInput = pidResult;
-    if (mileageInput > -50 && mileageInput < 50) {
-      mileageInput = 0;
-    }
-    mileageBuffer.push(constrain(mileageInput, -255, 255));
+    angleBuffer.push(angle);
+    int pidResult = (int) pid.runCycle(bufferAverage(angleBuffer) / 100);
     
+    bool balanced = pidResult > -motorController.minSignal && pidResult < motorController.minSignal;
+    
+    int mileageInput = balanced? 0 : pidResult;    
+
+    mileageBuffer.push(constrain(mileageInput, -255, 255));
+
     offset += targetPid.runCycle(-bufferSum(mileageBuffer));
     offset = constrain(offset, -20, 20);
     pid.targetValue = target + offset;
-  
-    Serial.print(bufferAverage(angleBuffer));
+
+    Serial.print(bufferAverage(angleBuffer) / 100);
     Serial.print(F("\t"));
-//    Serial.print(pidResult);
-//    Serial.print(F("\t"));
-//    Serial.print(-mileageSum());
-//    Serial.print(F("\t"));
-    Serial.println(pid.targetValue);    
-  
-    delay(20);
+    //    Serial.print(pidResult);
+    //    Serial.print(F("\t"));
+    //    Serial.print(-mileageSum());
+    //    Serial.print(F("\t"));
+    Serial.println(pid.targetValue);
+
+    if (!balanced) motorController.setMotorsUntimed(pidResult, pidResult, false);
+    else motorController.handleMotors();
+
   }
+  lastMotorUpdateTime = millis();
 }
 
 /*Fills a given int buffer with the given int number.*/
 template<size_t S>
 void fillBuffer(CircularBuffer<int, S> &cb, int filler, bool completeFill) {
   if (!completeFill) {
-    while (!cb.isFull()){
+    while (!cb.isFull()) {
       cb.push(filler);
     }
-  } 
+  }
   else {
     for (int i = 0; i < cb.size(); i++) {
       cb.push(filler);
@@ -141,11 +150,11 @@ float bufferAverage(CircularBuffer<int, S> &cb) {
 /*Calibrates the mpu angle for a given amount of time.*/
 void calibrateAngle(int calibrationTime) {
   unsigned long startTime = millis();
-  while (startTime + calibrationTime > millis()){
+  while (startTime + calibrationTime > millis()) {
     int angle = mpu.updateAngle();
-    angleBuffer.push(angle);    
+    angleBuffer.push(angle);
   }
 
-  target = bufferAverage(angleBuffer);
+  target = bufferAverage(angleBuffer) / 100;
   offset = 0.0;
 }
