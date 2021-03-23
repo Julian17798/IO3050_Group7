@@ -1,0 +1,29 @@
+' ******************************************************************************
+' swxJRNL.swj - journal recorded on 02/16/21 by Claude
+' *****************************************************************************
+Dim swApp As Object
+
+Dim Part As Object
+Dim boolstatus As Boolean
+Dim longstatus As Long, longwarnings As Long
+
+Sub main()
+
+Set swApp = _
+Application.SldWorks
+
+Set Part = swApp.OpenDoc6("C:\Users\Utilisateur\Documents\Download grabcad\Composants\603 cap on    pad.SLDPRT", 1, 0, "", longstatus, longwarnings)
+swApp.ActivateDoc2 "603 cap on    pad.SLDPRT", False, longstatus
+Set Part = swApp.ActiveDoc
+Set Part = swApp.ActiveDoc
+Dim myModelView As Object
+Set myModelView = Part.ActiveView
+myModelView.FrameLeft = 0
+myModelView.FrameTop = 21
+Set myModelView = Part.ActiveView
+myModelView.FrameWidth = 1605
+myModelView.FrameHeight = 867
+Set Part = Nothing
+swApp.CloseDoc "603 cap on    pad.SLDPRT"
+swApp.ExitApp
+End Sub
