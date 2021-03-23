@@ -10,8 +10,8 @@
 
 // Define motor pins.
 #define pwm1a 3
-#define pwm1b 9
-#define pwm2a 10
+#define pwm1b 5
+#define pwm2a 6
 #define pwm2b 11
 
 // Configure the motor drivers.
@@ -25,7 +25,7 @@ MotorController motorController(&motor1, &motor2, 2, 50);
 MPUReader mpu;
 
 // Initialize PID Controller.
-PIDController pid(0, 20, 100, 0.17); // <target, kp, ki, kd>
+PIDController pid(0, 10, 12, 0.03); // <target, kp, ki, kd>
 PIDController targetPid(0, 0.000015, 0, 0.00001);
 
 // Initialize Circular Buffers.
@@ -35,9 +35,9 @@ CircularBuffer<int, angleBufferSize> angleBuffer;
 CircularBuffer<int, mileageBufferSize> mileageBuffer;
 
 // Define servo pins.
-#define servo1Pin 4
-#define servo2Pin 5
-#define servo3Pin 6
+#define servo1Pin 2
+#define servo2Pin 4
+#define servo3Pin 7
 
 // Initialize Servo objects.
 Servo servo1;
@@ -59,11 +59,11 @@ void setup() {
   delay(2000);
 
   // Attach servo pins.
-//  servo1.attach(servo1Pin);
-//  servo2.attach(servo2Pin);
-//  servo3.attach(servo3Pin);
+  servo1.attach(servo1Pin);
+  servo2.attach(servo2Pin);
+  servo3.attach(servo3Pin);
 
-//  testServos();
+  testServos();
 
   // Setup the MPU reader.
   mpu.mpuSetup(0x68);
@@ -90,6 +90,7 @@ void setup() {
   calibrateAngle(5000);
 
   Serial.println(F("*START*"));
+  pid.pidMod = -1;
 }
 
 void loop() {
@@ -194,16 +195,26 @@ void calibrateAngle(int calibrationTime) {
 }
 
 void testServos() {
+  delay(2000);
+  Serial.println("Moving servo1");
   servo1.write(10);
   delay(2000);
+  Serial.println("Moving servo2");
   servo2.write(10);
   delay(2000);
+  Serial.println("Moving servo3");
   servo3.write(10);
   delay(2000);
+  Serial.println("Moving servo1");
   servo1.write(200);
   delay(2000);
+  Serial.println("Moving servo2");
   servo2.write(200);
   delay(2000);
+  Serial.println("Moving servo3");
   servo3.write(200);
   delay(2000);
+//  servo1.detach();
+//  servo2.detach();
+//  servo3.detach();
 }

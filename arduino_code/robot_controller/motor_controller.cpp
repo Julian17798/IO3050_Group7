@@ -50,6 +50,10 @@ void MotorController::setMotorSpeeds(int spd1, int spd2, bool manual) {
   _motor1->setSpeed(spd1);
   _motor2->setSpeed(spd2);
 
+  Serial.print(spd1);
+  Serial.print("\t");
+  Serial.println(spd2);
+
   _lastSpd1 = spd1;
   _lastSpd2 = spd2;
 
