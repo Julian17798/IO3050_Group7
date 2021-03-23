@@ -15,7 +15,7 @@ class MPUReader {
     MPU9250 _mpu;
 
   public:
-    MPUReader(int ledPin);
+    MPUReader();
     void mpuSetup(int address);
     int updateAngle(void);
 

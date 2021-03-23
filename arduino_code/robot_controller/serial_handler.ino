@@ -3,6 +3,9 @@ char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
 extern MotorController motorController;
 extern PIDController pid;
+extern PIDController targetPid;
+extern CircularBuffer<int, angleBufferSize> angleBuffer;
+extern CircularBuffer<int, mileageBufferSize> mileageBuffer;
 
 #define invArg F("ERROR INVALID_ARGUMENT")
 #define invNum F("ERROR INVALID_NUMBER")
@@ -18,9 +21,10 @@ SerialCommand cmdModifyPidConsts_("!pid", cmdModifyPidConsts);
 SerialCommand cmdSetTarget_("!target", cmdSetTarget);
 SerialCommand cmdFlipPid_("!flipPid", cmdFlipPid);
 SerialCommand cmdGetPid_("!getPid", cmdGetPid);
+SerialCommand cmdReset_("!reset", cmdReset);
 
 /*Sets up all of our custom serial commands.*/
-void setupSerialCommands() {   
+void setupSerialCommands() {
   serial_commands_.SetDefaultHandler(cmdUnrecognized);
   serial_commands_.AddCommand(&cmdSwitchMode_);
   serial_commands_.AddCommand(&cmdSetTimedSpeed_);
@@ -31,6 +35,7 @@ void setupSerialCommands() {
   serial_commands_.AddCommand(&cmdSetTarget_);
   serial_commands_.AddCommand(&cmdFlipPid_);
   serial_commands_.AddCommand(&cmdGetPid_);
+  serial_commands_.AddCommand(&cmdReset_);
 }
 
 /*Reads the serial input and calls the relevant commands.*/
@@ -39,7 +44,7 @@ void handleSerial() {
 }
 
 /*Default handler. Gets called when no other command matches.*/
-void cmdUnrecognized(SerialCommands* sender, const char* cmd) {  
+void cmdUnrecognized(SerialCommands* sender, const char* cmd) {
   sender->GetSerial()->print(F("Unrecognized command ["));
   sender->GetSerial()->print(cmd);
   sender->GetSerial()->println(F("]"));
@@ -49,28 +54,25 @@ void cmdUnrecognized(SerialCommands* sender, const char* cmd) {
 void cmdSwitchMode(SerialCommands* sender) {
   balanceMode = !balanceMode;
 
-  motorController.setMotorsUntimed(0, 0);
+  motorController.setMotorsUntimed(0, 0, true);
 
-  if (balanceMode) {
-    sender->GetSerial()->println(F("Balance on"));
-  } else {
-    sender->GetSerial()->println(F("Balance off"));
-  }
+  if (balanceMode) sender->GetSerial()->println(F("Balance on"));
+  else sender->GetSerial()->println(F("Balance off"));
 }
 
 /*Serial command that turns on the motors at given speeds for a given amount of time.*/
 void cmdSetTimedSpeed(SerialCommands* sender) {
-  if (!checkMode(sender, balanceMode, false)) { return; }
+//  if (!checkMode(sender, balanceMode, false)) return;
 
   // Get and validate arguments.
   char* spd1Str = sender->Next();
-  if (!validateIntInput(sender, spd1Str)) { return; }
+  if (!validateIntInput(sender, spd1Str)) return;
 
   char* spd2Str = sender->Next();
-  if (!validateIntInput(sender, spd2Str)) { return; }
+  if (!validateIntInput(sender, spd2Str)) return;
 
   char* timeStr = sender->Next();
-  if (!validateIntInput(sender, timeStr)) { return; }
+  if (!validateIntInput(sender, timeStr)) return;
 
   // Turn string arguments into ints.
   int spd1 = atoi(spd1Str);
@@ -78,7 +80,7 @@ void cmdSetTimedSpeed(SerialCommands* sender) {
   int duration = atoi(timeStr);
 
   // Activate the motors at the given speeds for a given amount of time.
-  motorController.setMotorsTimed(spd1, spd2, duration);  
+  motorController.setMotorsTimed(spd1, spd2, duration, true);
 
   sender->GetSerial()->print(F("Set timed speed. Motor 1 spd: "));
   sender->GetSerial()->print(spd1);
@@ -90,21 +92,21 @@ void cmdSetTimedSpeed(SerialCommands* sender) {
 
 /*Serial command that turns on the motors at given speeds.*/
 void cmdSetUntimedSpeed(SerialCommands* sender) {
-  if (!checkMode(sender, balanceMode, false)) { return; }
+//  if (!checkMode(sender, balanceMode, false)) return;
 
   // Get and validate arguments.
   char* spd1Str = sender->Next();
-  if (!validateIntInput(sender, spd1Str)) { return; }
+  if (!validateIntInput(sender, spd1Str)) return;
 
   char* spd2Str = sender->Next();
-  if (!validateIntInput(sender, spd2Str)) { return; }
+  if (!validateIntInput(sender, spd2Str)) return;
 
   // Turn string arguments into ints.
   int spd1 = atoi(spd1Str);
   int spd2 = atoi(spd2Str);
 
   // Activate the motors at the given speeds.
-  motorController.setMotorsUntimed(spd1, spd2);
+  motorController.setMotorsUntimed(spd1, spd2, true);
 
   sender->GetSerial()->print(F("Set untimed speed. Motor 1 spd: "));
   sender->GetSerial()->print(spd1);
@@ -114,10 +116,10 @@ void cmdSetUntimedSpeed(SerialCommands* sender) {
 
 /*Serial command that stops the motors.*/
 void cmdStop(SerialCommands* sender) {
-  if (!checkMode(sender, balanceMode, false)) { return; }
+//  if (!checkMode(sender, balanceMode, false)) return;
 
   // Stop motors and timer
-  motorController.setMotorsUntimed(0, 0);
+  motorController.setMotorsUntimed(0, 0, true);
 
   sender->GetSerial()->println(F("Stopped motors"));
 }
@@ -127,9 +129,9 @@ void cmdFlipMotor(SerialCommands* sender) {
 
   // Get and validate the argument.
   char* mStr = sender->Next();
-  if (!validateIntInput(sender, mStr)) { return; }
+  if (!validateIntInput(sender, mStr)) return;
 
-  // Turn string argument into
+  // Turn string argument into int
   int m = atoi(mStr);
 
   // Check whether the int value is valid for this command.
@@ -157,7 +159,7 @@ void cmdModifyPidConsts(SerialCommands* sender) {
   char* modStr = sender->Next();
 
   // Validate float input.
-  if (!validateFloatInput(sender, modStr)) { return; }
+  if (!validateFloatInput(sender, modStr)) return;
   float arg = atof(modStr);
 
   // Modify the right constant.
@@ -174,10 +176,10 @@ void cmdModifyPidConsts(SerialCommands* sender) {
 
 /*Modifies the target value of the PID controller.*/
 void cmdSetTarget(SerialCommands* sender) {
-  
+
   // Get and validate the argument.
   char* targetStr = sender->Next();
-  if (!validateFloatInput(sender, targetStr)) { return; }
+  if (!validateFloatInput(sender, targetStr)) return;
 
   // Set the target value of the pid.
   float input = atof(targetStr);
@@ -206,15 +208,33 @@ void cmdGetPid(SerialCommands* sender) {
   sender->GetSerial()->println(pid.kd);
 }
 
+/*Resets the pids, the motors and the angle.*/
+void cmdReset(SerialCommands* sender) {
+
+  // Reset the pid controllers.
+  pid.reset();
+  targetPid.reset();
+
+  // Turn off the motors.
+  motorController.setMotorsUntimed(0, 0, true);
+
+  // Recalibrate the angle.
+  calibrateAngle(5000);
+
+  // Refill the buffers with 0.
+  fillBuffer(angleBuffer, 0, true);
+  fillBuffer(mileageBuffer, 0, true);
+}
+
 /*Checks whether the input string is an integer number.*/
 bool isInt(String str) {
-  
+
   // Check if the first character is either a digit or a '-'.
-  if (!isdigit(str.charAt(0)) && str.charAt(0) != '-') { return false; }
-  
+  if (!isdigit(str.charAt(0)) && str.charAt(0) != '-') return false;
+
   // Loop over the rest of the characters and check if they are digits.
   for (int i = 1; i < str.length(); i++) {
-    if (!isdigit(str.charAt(i))) { return false; }
+    if (!isdigit(str.charAt(i))) return false;
   }
 
   // Return true if the input string is a valid int.
@@ -254,10 +274,10 @@ bool isFloat(String str) {
   // If more than 1 '.' is encountered, return false.
   for (int i = 1; i < str.length(); i++) {
     if (str.charAt(i) == '.') {
-      if (dotEncountered) { return false; }
-      else { dotEncountered = true; }
+      if (dotEncountered) return false;
+      else dotEncountered = true;
     }
-    else if (!isdigit(str.charAt(i))) { return false; }
+    else if (!isdigit(str.charAt(i))) return false;
   }
 
   // Return true if the input string is a valid float.

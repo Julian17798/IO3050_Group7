@@ -7,7 +7,7 @@ PIDController::PIDController(float target, float kp, float ki, float kd) {
   _totalError = 0;
   _previousError = 0;
   _lastUpdateTime = 0;
-  printValues = true;
+  printValues = false;
   pidMod = 1;
 
   targetValue = target;
@@ -61,4 +61,11 @@ void PIDController::modifyConstants(float kp, float ki, float kd) {
   Serial.print(ki);
   Serial.print(F(", kd = "));
   Serial.println(kd);
+}
+
+void PIDController::reset() {
+  _totalError = 0;
+  _previousError = 0;
+  _lastUpdateTime = 0;
+  pidMod = 1;
 }

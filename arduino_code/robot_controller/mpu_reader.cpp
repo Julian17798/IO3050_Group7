@@ -3,8 +3,7 @@
 #include "mpu_reader.h"
 
 /*Constructor.*/
-MPUReader::MPUReader(int ledPin): _mpu() {
-  _ledPin = ledPin;
+MPUReader::MPUReader(): _mpu() {
   _lastUpdateTime = 0;
 }
 
