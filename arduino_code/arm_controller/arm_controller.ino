@@ -11,6 +11,8 @@ ArmController arm(&servo1, &servo2, &servo3);
 void setup() {
   Serial.begin(38400);
 
+  setupSerialCommands();
+
   arm.setupServos(servo1Pin, servo2Pin, servo3Pin);
 
   delay(1000);
@@ -20,5 +22,6 @@ void setup() {
 }
 
 void loop() {
+  handleSerial();
   arm.updateArm();
 }
