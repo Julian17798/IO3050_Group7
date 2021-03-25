@@ -112,7 +112,7 @@ void handleMotors() {
     int pidResult = (int) pid.runCycle(bufferAverage(angleBuffer) / 100);
 
     // Check whether the robot is balanced.
-    bool balanced = pidResult > -motorController.minSignal && pidResult < motorController.minSignal;
+    bool balanced = abs(pidResult) < motorController.minSignal;
 
     // Add mileage to the mileage buffer.
     int mileageInput = balanced ? 0 : pidResult;
@@ -121,7 +121,6 @@ void handleMotors() {
     // Do PD calculations for the dynamic setpoint and set the offset.
     offset += targetPid.runCycle(-bufferSum(mileageBuffer));
     offset = constrain(offset, -20, 20);
-    offset = 0;
     pid.targetValue = target + offset;
 
     Serial.print(bufferAverage(angleBuffer) / 100);
@@ -137,19 +136,5 @@ void handleMotors() {
     // Or execute serial instructions if the robot is balanced.
     else motorController.handleMotors();
 
-  }
-}
-
-/*Fills a given int buffer with the given int number.*/
-template<size_t S>
-void fillBuffer(CircularBuffer<int, S> &cb, int filler, bool completeFill) {
-
-  // Fill the buffer until it's full.
-  if (!completeFill) {
-    while (!cb.isFull()) cb.push(filler);
-  }
-  // Or completely fill the buffer with the given filler.
-  else {
-    for (uint8_t i = 0; i < cb.size(); i++) cb.push(filler);
   }
 }

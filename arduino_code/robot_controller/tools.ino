@@ -1,3 +1,17 @@
+/*Fills a given int buffer with the given int number.*/
+template<size_t S>
+void fillBuffer(CircularBuffer<int, S> &cb, int filler, bool completeFill) {
+
+  // Fill the buffer until it's full.
+  if (!completeFill) {
+    while (!cb.isFull()) cb.push(filler);
+  }
+  // Or completely fill the buffer with the given filler.
+  else {
+    for (uint8_t i = 0; i < cb.size(); i++) cb.push(filler);
+  }
+}
+
 /*Returns the sum of an int buffer.*/
 template<size_t S>
 int bufferSum(CircularBuffer<int, S> &cb) {
