@@ -4,6 +4,7 @@ SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_c
 extern MotorController motorController;
 extern PIDController pid;
 extern PIDController targetPid;
+extern ArmController arm;
 extern CircularBuffer<int, angleBufferSize> angleBuffer;
 extern CircularBuffer<int, mileageBufferSize> mileageBuffer;
 
@@ -21,6 +22,8 @@ SerialCommand cmdModifyPidConsts_("!pid", cmdModifyPidConsts);
 SerialCommand cmdSetTarget_("!target", cmdSetTarget);
 SerialCommand cmdFlipPid_("!flipPid", cmdFlipPid);
 SerialCommand cmdGetPid_("!getPid", cmdGetPid);
+SerialCommand cmdServoTarget_("!servo", cmdServoTarget);
+SerialCommand cmdServoTargets_("!servos", cmdServoTargets);
 SerialCommand cmdReset_("!reset", cmdReset);
 
 /*Sets up all of our custom serial commands.*/
@@ -35,6 +38,8 @@ void setupSerialCommands() {
   serial_commands_.AddCommand(&cmdSetTarget_);
   serial_commands_.AddCommand(&cmdFlipPid_);
   serial_commands_.AddCommand(&cmdGetPid_);
+  serial_commands_.AddCommand(&cmdServoTarget_);
+  serial_commands_.AddCommand(&cmdServoTargets_);
   serial_commands_.AddCommand(&cmdReset_);
 }
 
@@ -62,7 +67,6 @@ void cmdSwitchMode(SerialCommands* sender) {
 
 /*Serial command that turns on the motors at given speeds for a given amount of time.*/
 void cmdSetTimedSpeed(SerialCommands* sender) {
-//  if (!checkMode(sender, balanceMode, false)) return;
 
   // Get and validate arguments.
   char* spd1Str = sender->Next();
@@ -92,7 +96,6 @@ void cmdSetTimedSpeed(SerialCommands* sender) {
 
 /*Serial command that turns on the motors at given speeds.*/
 void cmdSetUntimedSpeed(SerialCommands* sender) {
-//  if (!checkMode(sender, balanceMode, false)) return;
 
   // Get and validate arguments.
   char* spd1Str = sender->Next();
@@ -116,8 +119,7 @@ void cmdSetUntimedSpeed(SerialCommands* sender) {
 
 /*Serial command that stops the motors.*/
 void cmdStop(SerialCommands* sender) {
-//  if (!checkMode(sender, balanceMode, false)) return;
-
+  
   // Stop motors and timer
   motorController.setMotorsUntimed(0, 0, true);
 
@@ -206,6 +208,76 @@ void cmdGetPid(SerialCommands* sender) {
   sender->GetSerial()->print(pid.ki);
   sender->GetSerial()->print(F(", kd = "));
   sender->GetSerial()->println(pid.kd);
+}
+
+/*Sets the target signal for a given servo number.*/
+void cmdServoTarget(SerialCommands* sender) {
+  
+  // Get and validate arguments.
+  char* servoStr = sender->Next();
+  if (!validateIntInput(sender, servoStr)) return;
+
+  char* targetStr = sender->Next();
+  if (!validateIntInput(sender, targetStr)) return;
+
+  int servo = atoi(servoStr);
+  if (servo < 0 || servo > 2) {
+    sender->GetSerial()->println(F("INVALID SERVO"));
+    return;
+  }  
+  
+  int target = atoi(targetStr);
+  if (target < 0 || target > 255) {
+    sender->GetSerial()->println(F("INVALID SIGNAL"));
+    return;
+  }
+
+  Serial.print(F("Setting servo "));
+  Serial.print(servo);
+  Serial.print(F(" to "));
+  Serial.println(target);
+  
+  arm.setTarget(servo, target);
+}
+
+void cmdServoTargets(SerialCommands* sender) {
+
+  // Get and validate arguments
+  char* target1Str = sender->Next();
+  if (!validateIntInput(sender, target1Str)) return;
+
+  char* target2Str = sender->Next();
+  if (!validateIntInput(sender, target2Str)) return;
+
+  char* target3Str = sender->Next();
+  if (!validateIntInput(sender, target3Str)) return;
+
+  int target1 = atoi(target1Str);
+  if (target1 < 0 || target1 > 255) {
+    sender->GetSerial()->println(F("INVALID SIGNAL"));
+    return;
+  }
+  
+  int target2 = atoi(target2Str);
+  if (target2 < 0 || target2 > 255) {
+    sender->GetSerial()->println(F("INVALID SIGNAL"));
+    return;
+  }
+  
+  int target3 = atoi(target3Str);
+  if (target3 < 0 || target3 > 255) {
+    sender->GetSerial()->println(F("INVALID SIGNAL"));
+    return;
+  }
+
+  Serial.print(F("Setting servos to "));
+  Serial.print(target1);
+  Serial.print(F(", "));
+  Serial.print(target2);
+  Serial.print(F(", "));
+  Serial.println(target3);
+  
+  arm.setTargets(target1, target2, target3);  
 }
 
 /*Resets the pids, the motors and the angle.*/
@@ -298,15 +370,4 @@ bool validateFloatInput(SerialCommands* sender, char* strInput) {
     return false;
   }
   return true;
-}
-
-/*Checks whether the robot mode required for the command to execute is the right one.*/
-bool checkMode(SerialCommands* sender, bool mode, bool desiredMode) {
-  if (mode == desiredMode) {
-    return true;
-  }
-  else {
-    sender->GetSerial()->println(F("Rejected. Wrong mode"));
-    return false;
-  }
 }

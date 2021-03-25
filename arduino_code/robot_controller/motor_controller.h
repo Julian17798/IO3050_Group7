@@ -21,13 +21,13 @@ class MotorController {
     void activateTimer(int duration);
 
   public:
-    int minSignal;
+    uint8_t minSignal;
   
-    MotorController(CytronMD *motor1, CytronMD *motor2, int flipMotor, int minSignal);
+    MotorController(CytronMD *motor1, CytronMD *motor2, uint8_t flipMotor, uint8_t minSignal);
     void handleMotors(void);
     void setMotorsTimed(int spd1, int spd2, int duration, bool manual);
     void setMotorsUntimed(int spd1, int spd2, bool manual);
-    void flipMotor(byte motor);
+    void flipMotor(uint8_t motor);
 
 };
 

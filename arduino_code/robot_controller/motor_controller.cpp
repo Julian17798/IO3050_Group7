@@ -4,7 +4,7 @@
 #define CHECK_BIT(var, pos) ((var) & (1<<(pos)))
 
 /*Constructor.*/
-MotorController::MotorController(CytronMD *motor1, CytronMD *motor2, int flipMotor, int minSignal) {
+MotorController::MotorController(CytronMD *motor1, CytronMD *motor2, uint8_t flipMotor, uint8_t minSignal) {
   _motor1 = motor1;
   _motor2 = motor2;
   _timerActive = false;
@@ -82,7 +82,7 @@ void MotorController::setMotorsUntimed(int spd1, int spd2, bool manual) {
 }
 
 /*Flips future motor speeds for a given motor.*/
-void MotorController::flipMotor(byte motor) {
+void MotorController::flipMotor(uint8_t motor) {
   // Check if the bit for 1 is on -> 00000001
   if (CHECK_BIT(motor, 0)) _flipM1 = !_flipM1;
   // Check if the bit for 2 is on -> 00000010

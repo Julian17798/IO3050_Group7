@@ -26,6 +26,7 @@ class ArmController {
     void setMin(uint8_t servo, uint8_t value);
     void setMax(uint8_t servo, uint8_t value);
     void setTarget(uint8_t servo, uint8_t value);
+    void setTargets(uint8_t value1, uint8_t value2, uint8_t value3);
     void updateArm();
 
 };

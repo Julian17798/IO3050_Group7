@@ -5,6 +5,7 @@
 #include "pid.h"
 #include "mpu_reader.h"
 #include "motor_controller.h"
+#include "arm.h"
 
 /*This project requires the SerialCommands library by Pedro Tiago Pereira and the CircularBuffer library by AgileWare.*/
 
@@ -40,16 +41,16 @@ CircularBuffer<int, mileageBufferSize> mileageBuffer;
 #define servo3Pin 7
 
 // Initialize Servo objects.
-Servo servo1;
-Servo servo2;
-Servo servo3;
+Servo servo1, servo2, servo3;
+
+// Initialize an Arm Controller object and pass pointers to the servo objects
+ArmController arm(&servo1, &servo2, &servo3);
 
 #define motorUpdateInterval 20
 
 bool balanceMode = true;
 
-float target = 0.0;
-float offset = 0.0;
+float target = 0.0, offset = 0.0;
 
 unsigned long lastMotorUpdateTime = 0;
 
@@ -57,13 +58,6 @@ void setup() {
   Serial.begin(38400);
   Wire.begin();
   delay(2000);
-
-  // Attach servo pins.
-  servo1.attach(servo1Pin);
-  servo2.attach(servo2Pin);
-  servo3.attach(servo3Pin);
-
-  testServos();
 
   // Setup the MPU reader.
   mpu.mpuSetup(0x68);
@@ -75,13 +69,6 @@ void setup() {
 
   delay(2000);
 
-  // Turn on the motors for one second.
-//  motorController.setMotorsUntimed(100, 100, false);
-//
-//  delay(1000);
-//
-//  motorController.setMotorsUntimed(0, 0, false);
-
   // Fill the buffers with 0.
   fillBuffer(angleBuffer, 0, true);
   fillBuffer(mileageBuffer, 0, true);
@@ -89,12 +76,19 @@ void setup() {
   // Calibrate the angle for 5000 ms.
   calibrateAngle(5000);
 
+  // Setup the servos in the mechanical arm.
+  arm.setupServos(servo1Pin, servo2Pin, servo3Pin, false);
+
+  // Set the servos to their default target positions.
+  arm.setTargets(30, 60, 127);
+
   Serial.println(F("*START*"));
   pid.pidMod = -1;
 }
 
 void loop() {
   handleSerial();
+  arm.updateArm();
   handleMotors();
 }
 
@@ -156,65 +150,6 @@ void fillBuffer(CircularBuffer<int, S> &cb, int filler, bool completeFill) {
   }
   // Or completely fill the buffer with the given filler.
   else {
-    for (int i = 0; i < cb.size(); i++) cb.push(filler);
+    for (uint8_t i = 0; i < cb.size(); i++) cb.push(filler);
   }
-}
-
-/*Returns the sum of an int buffer.*/
-template<size_t S>
-int bufferSum(CircularBuffer<int, S> &cb) {
-
-  // Loop over all elements in the buffer and add them together.
-  int sum = 0;
-  for (int i = 0; i < cb.size(); i++) sum += cb[i];
-  return sum;
-}
-
-/*Returns the float average of an int buffer.*/
-template<size_t S>
-float bufferAverage(CircularBuffer<int, S> &cb) {
-
-  // Get the sum of the buffer and divide by its size.
-  int sum = bufferSum(cb);
-  return (float) sum / cb.size();
-}
-
-/*Calibrates the mpu angle for a given amount of time.*/
-void calibrateAngle(int calibrationTime) {
-
-  // Recalibrate the angle for the given amount of time.
-  unsigned long startTime = millis();
-  while (startTime + calibrationTime > millis()) {
-    int angle = mpu.updateAngle();
-    angleBuffer.push(angle);
-  }
-
-  // Assign the new target value and reset the offset to 0.0.
-  target = bufferAverage(angleBuffer) / 100;
-  offset = 0.0;
-}
-
-void testServos() {
-  delay(2000);
-  Serial.println("Moving servo1");
-  servo1.write(10);
-  delay(2000);
-  Serial.println("Moving servo2");
-  servo2.write(10);
-  delay(2000);
-  Serial.println("Moving servo3");
-  servo3.write(10);
-  delay(2000);
-  Serial.println("Moving servo1");
-  servo1.write(200);
-  delay(2000);
-  Serial.println("Moving servo2");
-  servo2.write(200);
-  delay(2000);
-  Serial.println("Moving servo3");
-  servo3.write(200);
-  delay(2000);
-//  servo1.detach();
-//  servo2.detach();
-//  servo3.detach();
 }

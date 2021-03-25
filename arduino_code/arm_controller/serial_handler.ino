@@ -39,11 +39,13 @@ void cmdServoTarget(SerialCommands* sender) {
   int servo = atoi(servoStr);
   if (servo < 0 || servo > 2) {
     sender->GetSerial()->println(F("INVALID SERVO"));
+    return;
   }  
   
   int target = atoi(targetStr);
   if (target < 0 || target > 255) {
     sender->GetSerial()->println(F("INVALID SIGNAL"));
+    return;
   }
 
   Serial.print("Setting servo ");
