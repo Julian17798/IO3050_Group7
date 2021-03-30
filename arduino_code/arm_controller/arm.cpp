@@ -14,7 +14,7 @@ ArmController::ArmController(Servo *servo1, Servo *servo2, Servo *servo3) {
 }
 
 /*Attach ports and set the servos to the middle angle.*/
-void ArmController::setupServos(uint8_t port1, uint8_t port2, uint8_t port3, bool setAngles) {
+void ArmController::setupServos(uint8_t port1, uint8_t port2, uint8_t port3, uint8_t defaultAngles[3]) {
 
   // Attach given ports
   servos[0]->attach(port1);
@@ -23,9 +23,9 @@ void ArmController::setupServos(uint8_t port1, uint8_t port2, uint8_t port3, boo
 
   // Set all servos to 127 and set the min and max signals for each servo to 0 and 255 respectively.
   for (uint8_t i = 0; i < 3; i++) {
-    if (setAngles) servos[i]->write(127);
-    s_current[i] = 127;
-    s_targets[i] = 127;
+    servos[i]->write(defaultAngles[i]);
+    s_current[i] = defaultAngles[i];
+    s_targets[i] = defaultAngles[i];
 
     s_min[i] = 0;
     s_max[i] = 255;

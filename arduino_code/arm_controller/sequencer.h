@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 /*Sequencer class.
-*/
+Allows for the sequencing of int values and passes them to a given function.*/
 class Sequencer {
 
   private:

@@ -6,20 +6,20 @@
 #define servo2Pin 4
 #define servo3Pin 7
 
-uint8_t defaultAngles[3] = {30, 60, 127};
+const uint8_t defaultAngles[3] = {30, 60, 127};
 
-uint8_t sigs0[4] = {40, 50, 40, 30};
-uint16_t pause0[3] = {2000, 2000, 2000};
+const uint8_t sigs0[4] = {40, 50, 40, 30};
+const uint16_t pause0[3] = {2000, 2000, 2000};
 
 Sequencer seq0(&s0Input, 4, sigs0, pause0);
 
-uint8_t sigs1[4] = {200, 150, 200, 100};
-uint16_t pause1[3] = {2000, 2000, 2000};
+const uint8_t sigs1[4] = {200, 150, 200, 100};
+const uint16_t pause1[3] = {2000, 2000, 2000};
 
 Sequencer seq1(&s1Input, 4, sigs1, pause1);
 
-uint8_t sigs2[4] = {200, 150, 200, 100};
-uint16_t pause2[3] = {2000, 2000, 2000};
+const uint8_t sigs2[4] = {200, 150, 200, 100};
+const uint16_t pause2[3] = {2000, 2000, 2000};
 
 Sequencer seq2(&s2Input, 4, sigs2, pause2);
 
@@ -31,12 +31,9 @@ void setup() {
 
   setupSerialCommands();
 
-  arm.setupServos(servo1Pin, servo2Pin, servo3Pin, false);
+  arm.setupServos(servo1Pin, servo2Pin, servo3Pin, defaultAngles);
 
   delay(1000);
-  for (uint8_t i = 0; i < 3; i++) {
-    arm.setTarget(i, defaultAngles[i]);
-  }
 
   seq0.startSequence();
   seq1.startSequence();
