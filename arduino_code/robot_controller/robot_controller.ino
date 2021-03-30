@@ -54,7 +54,7 @@ ArmController arm(&servo1, &servo2, &servo3);
 
 /*How to write a sequence:
 A sequence is defined by two arrays. One is an array of unsigned 8 bit ints (or chars)
-and the other is an array of usigned 16 bit ints. The first array with length x contains all the outputs
+and the other is an array of usigned 16 bit ints. The first array with length x contains all the output signals
 in the sequence and second array with length x - 1 contains all the "delays" between the signals in ms.*/
 
 const uint8_t sigs0[4] = {40, 50, 40, 30};
@@ -109,9 +109,6 @@ void setup() {
 
   // Setup the servos in the mechanical arm.
   arm.setupServos(servo1Pin, servo2Pin, servo3Pin, defaultAngles);
-
-  // Set the servos to their default target positions.
-  arm.setTargets(30, 60, 127);
 
   Serial.println(F("*START*"));
   pid.pidMod = -1;
