@@ -2,7 +2,7 @@
 char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
 extern ArmController arm;
-extern Sequencer seq;
+extern Sequencer seq0, seq1, seq2;
 
 #define invArg F("ERROR INVALID_ARGUMENT")
 #define invNum F("ERROR INVALID_NUMBER")
@@ -33,12 +33,15 @@ void cmdUnrecognized(SerialCommands* sender, const char* cmd) {
   sender->GetSerial()->println(F("]"));
 }
 
+/*Starts the sequences.*/
 void cmdStartSequence(SerialCommands* sender) {
-  seq.startSequence();
+  seq0.startSequence();
+  seq1.startSequence();
+  seq2.startSequence();
 }
 
 void cmdServoTarget(SerialCommands* sender) {
-  
+
   // Get and validate arguments.
   char* servoStr = sender->Next();
   if (!validateIntInput(sender, servoStr)) return;
@@ -50,8 +53,8 @@ void cmdServoTarget(SerialCommands* sender) {
   if (servo < 0 || servo > 2) {
     sender->GetSerial()->println(F("INVALID SERVO"));
     return;
-  }  
-  
+  }
+
   int target = atoi(targetStr);
   if (target < 0 || target > 255) {
     sender->GetSerial()->println(F("INVALID SIGNAL"));
@@ -82,13 +85,13 @@ void cmdServoTargets(SerialCommands* sender) {
     sender->GetSerial()->println(F("INVALID SIGNAL"));
     return;
   }
-  
+
   int target2 = atoi(target2Str);
   if (target2 < 0 || target2 > 255) {
     sender->GetSerial()->println(F("INVALID SIGNAL"));
     return;
   }
-  
+
   int target3 = atoi(target3Str);
   if (target3 < 0 || target3 > 255) {
     sender->GetSerial()->println(F("INVALID SIGNAL"));
@@ -101,8 +104,8 @@ void cmdServoTargets(SerialCommands* sender) {
   Serial.print(target2);
   Serial.print(F(", "));
   Serial.println(target3);
-  
-  arm.setTargets(target1, target2, target3);  
+
+  arm.setTargets(target1, target2, target3);
 }
 
 /*Checks whether the input string is an integer number.*/

@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+/*Sequencer class.
+*/
 class Sequencer {
 
   private:
@@ -19,7 +21,7 @@ class Sequencer {
     void updateSequence();
     void startSequence();
     void stopSequence();
-    
+
 };
 
 #endif
