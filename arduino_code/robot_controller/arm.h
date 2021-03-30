@@ -20,7 +20,7 @@ class ArmController {
 
   public:
     ArmController(Servo *servo1, Servo *servo2, Servo *servo3);
-    void setupServos(uint8_t port1, uint8_t port2, uint8_t port3, bool setAngles);
+    void setupServos(uint8_t port1, uint8_t port2, uint8_t port3, uint8_t defaultAngles[3]);
     void setUpdateInterval(uint8_t value);
     void setServoSpeed(uint8_t value);
     void setMin(uint8_t servo, uint8_t value);

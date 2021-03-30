@@ -2,9 +2,9 @@
 char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
 extern MotorController motorController;
-extern PIDController pid;
-extern PIDController targetPid;
+extern PIDController pid, targetPid;
 extern ArmController arm;
+extern Sequencer seq0, seq1, seq2;
 extern CircularBuffer<int, angleBufferSize> angleBuffer;
 extern CircularBuffer<int, mileageBufferSize> mileageBuffer;
 
@@ -24,6 +24,7 @@ SerialCommand cmdFlipPid_("!flipPid", cmdFlipPid);
 SerialCommand cmdGetPid_("!getPid", cmdGetPid);
 SerialCommand cmdServoTarget_("!servo", cmdServoTarget);
 SerialCommand cmdServoTargets_("!servos", cmdServoTargets);
+SerialCommand cmdStartSequence_("!seq", cmdStartSequence);
 SerialCommand cmdReset_("!reset", cmdReset);
 
 /*Sets up all of our custom serial commands.*/
@@ -40,6 +41,7 @@ void setupSerialCommands() {
   serial_commands_.AddCommand(&cmdGetPid_);
   serial_commands_.AddCommand(&cmdServoTarget_);
   serial_commands_.AddCommand(&cmdServoTargets_);
+  serial_commands_.AddCommand(&cmdStartSequence_);
   serial_commands_.AddCommand(&cmdReset_);
 }
 
@@ -279,6 +281,13 @@ void cmdServoTargets(SerialCommands* sender) {
   Serial.println(target3);
   
   arm.setTargets(target1, target2, target3);  
+}
+
+/*Starts the sequences.*/
+void cmdStartSequence(SerialCommands* sender) {
+  seq0.startSequence();
+  seq1.startSequence();
+  seq2.startSequence();
 }
 
 /*Resets the pids, the motors and the angle.*/

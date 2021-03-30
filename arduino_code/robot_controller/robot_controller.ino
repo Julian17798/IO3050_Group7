@@ -6,6 +6,7 @@
 #include "mpu_reader.h"
 #include "motor_controller.h"
 #include "arm.h"
+#include "sequencer.h"
 
 /*This project requires the SerialCommands library by Pedro Tiago Pereira and the CircularBuffer library by AgileWare.*/
 
@@ -43,8 +44,38 @@ CircularBuffer<int, mileageBufferSize> mileageBuffer;
 // Initialize Servo objects.
 Servo servo1, servo2, servo3;
 
-// Initialize an Arm Controller object and pass pointers to the servo objects
+// The default signals to the servos upon startup.
+const uint8_t defaultAngles[3] = {30, 60, 127};
+
+// Initialize an Arm Controller object and pass pointers to the servo objects.
 ArmController arm(&servo1, &servo2, &servo3);
+
+// Initialize the Sequencers.
+
+/*How to write a sequence:
+A sequence is defined by two arrays. One is an array of unsigned 8 bit ints (or chars)
+and the other is an array of usigned 16 bit ints. The first array with length x contains all the outputs
+in the sequence and second array with length x - 1 contains all the "delays" between the signals in ms.*/
+
+const uint8_t sigs0[4] = {40, 50, 40, 30};
+const uint16_t pause0[3] = {2000, 2000, 2000};
+
+/*Initiating a Sequencer object requires the two earlier mentioned arrays as well as a pointer to a function
+and an int specification of how long the sequence is. The function is required to have one single uint8_t argument and
+is called in the sequencer with an element from the output array as input.*/
+
+Sequencer seq0(&s0Input, 4, sigs0, pause0); // <pointer to function, length of sequence, signal array, delay array>
+
+const uint8_t sigs1[4] = {200, 150, 200, 100};
+const uint16_t pause1[3] = {2000, 2000, 2000};
+
+Sequencer seq1(&s1Input, 4, sigs1, pause1);
+
+const uint8_t sigs2[4] = {200, 150, 200, 100};
+const uint16_t pause2[3] = {2000, 2000, 2000};
+
+Sequencer seq2(&s2Input, 4, sigs2, pause2);
+
 
 #define motorUpdateInterval 20
 
@@ -77,17 +108,25 @@ void setup() {
   calibrateAngle(5000);
 
   // Setup the servos in the mechanical arm.
-  arm.setupServos(servo1Pin, servo2Pin, servo3Pin, false);
+  arm.setupServos(servo1Pin, servo2Pin, servo3Pin, defaultAngles);
 
   // Set the servos to their default target positions.
   arm.setTargets(30, 60, 127);
 
   Serial.println(F("*START*"));
   pid.pidMod = -1;
+
+  // Uncomment this to run the sequences for the servos at startup.
+//  seq0.startSequence();
+//  seq1.startSequence();
+//  seq2.startSequence();
 }
 
 void loop() {
   handleSerial();
+  seq0.updateSequence();
+  seq1.updateSequence();
+  seq2.updateSequence();
   arm.updateArm();
   handleMotors();
 }
@@ -137,4 +176,16 @@ void handleMotors() {
     else motorController.handleMotors();
 
   }
+}
+
+void s0Input(uint8_t sig) {
+  arm.setTarget(0, sig);
+}
+
+void s1Input(uint8_t sig) {
+  arm.setTarget(1, sig);
+}
+
+void s2Input(uint8_t sig) {
+  arm.setTarget(2, sig);
 }
