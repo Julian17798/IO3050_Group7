@@ -60,6 +60,13 @@ void ArmController::setTarget(uint8_t servo, uint8_t value) {
   s_targets[servo] = constrain(value, s_min[servo], s_max[servo]);
 }
 
+/*Set the targets for all servos.*/
+void ArmController::setTargets(uint8_t value1, uint8_t value2, uint8_t value3) {
+  setTarget(0, value1);
+  setTarget(1, value2);
+  setTarget(2, value3);
+}
+
 /*Updates servo signals depending on their target signals.*/
 void ArmController::updateArm() {
   

@@ -240,6 +240,7 @@ void cmdServoTarget(SerialCommands* sender) {
   arm.setTarget(servo, target);
 }
 
+/*Sets the target signal for all servos to three given ints.*/
 void cmdServoTargets(SerialCommands* sender) {
 
   // Get and validate arguments

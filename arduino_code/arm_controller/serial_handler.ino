@@ -2,17 +2,23 @@
 char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
 extern ArmController arm;
+extern Sequencer seq;
 
 #define invArg F("ERROR INVALID_ARGUMENT")
 #define invNum F("ERROR INVALID_NUMBER")
 #define misArg F("ERROR MISSING_ARGUMENT")
 
 SerialCommand cmdServoTarget_("!servo", cmdServoTarget);
+SerialCommand cmdServoTargets_("!servos", cmdServoTargets);
+SerialCommand cmdStartSequence_("!seq", cmdStartSequence);
+
 
 /*Sets up all of our custom serial commands.*/
 void setupSerialCommands() {
   serial_commands_.SetDefaultHandler(cmdUnrecognized);
   serial_commands_.AddCommand(&cmdServoTarget_);
+  serial_commands_.AddCommand(&cmdServoTargets_);
+  serial_commands_.AddCommand(&cmdStartSequence_);
 }
 
 /*Reads the serial input and calls the relevant commands.*/
@@ -25,6 +31,10 @@ void cmdUnrecognized(SerialCommands* sender, const char* cmd) {
   sender->GetSerial()->print(F("Unrecognized command ["));
   sender->GetSerial()->print(cmd);
   sender->GetSerial()->println(F("]"));
+}
+
+void cmdStartSequence(SerialCommands* sender) {
+  seq.startSequence();
 }
 
 void cmdServoTarget(SerialCommands* sender) {
@@ -53,6 +63,46 @@ void cmdServoTarget(SerialCommands* sender) {
   Serial.print(" to ");
   Serial.println(target);
   arm.setTarget(servo, target);
+}
+
+void cmdServoTargets(SerialCommands* sender) {
+
+  // Get and validate arguments
+  char* target1Str = sender->Next();
+  if (!validateIntInput(sender, target1Str)) return;
+
+  char* target2Str = sender->Next();
+  if (!validateIntInput(sender, target2Str)) return;
+
+  char* target3Str = sender->Next();
+  if (!validateIntInput(sender, target3Str)) return;
+
+  int target1 = atoi(target1Str);
+  if (target1 < 0 || target1 > 255) {
+    sender->GetSerial()->println(F("INVALID SIGNAL"));
+    return;
+  }
+  
+  int target2 = atoi(target2Str);
+  if (target2 < 0 || target2 > 255) {
+    sender->GetSerial()->println(F("INVALID SIGNAL"));
+    return;
+  }
+  
+  int target3 = atoi(target3Str);
+  if (target3 < 0 || target3 > 255) {
+    sender->GetSerial()->println(F("INVALID SIGNAL"));
+    return;
+  }
+
+  Serial.print(F("Setting servos to "));
+  Serial.print(target1);
+  Serial.print(F(", "));
+  Serial.print(target2);
+  Serial.print(F(", "));
+  Serial.println(target3);
+  
+  arm.setTargets(target1, target2, target3);  
 }
 
 /*Checks whether the input string is an integer number.*/
