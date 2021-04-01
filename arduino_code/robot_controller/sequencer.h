@@ -20,7 +20,6 @@ class Sequencer {
     Sequencer(void (*function)(uint8_t), uint8_t sequenceSize, uint8_t *outputs, uint16_t *pauses);
     void updateSequence();
     void startSequence();
-    void stopSequence();
 
 };
 

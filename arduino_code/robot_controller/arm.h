@@ -9,14 +9,14 @@
 class ArmController {
 
   private:
-    unsigned long lastUpdateTime;
-    Servo *servos[3];
-    uint8_t s_current[3];
-    uint8_t s_targets[3];
-    uint8_t s_min[3];
-    uint8_t s_max[3];
-    uint8_t servoSpeed;
-    uint8_t updateInterval;
+    unsigned long _lastUpdateTime;
+    Servo *_servos[3];
+    uint8_t _s_current[3];
+    uint8_t _s_targets[3];
+    uint8_t _s_min[3];
+    uint8_t _s_max[3];
+    uint8_t _servoSpeed;
+    uint8_t _updateInterval;
 
   public:
     ArmController(Servo *servo1, Servo *servo2, Servo *servo3);

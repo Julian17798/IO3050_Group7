@@ -13,19 +13,19 @@ extern CircularBuffer<int, mileageBufferSize> mileageBuffer;
 #define misArg F("ERROR MISSING_ARGUMENT")
 
 // Serial commands and their input string triggers
-SerialCommand cmdSwitchMode_("!switchMode", cmdSwitchMode);
-SerialCommand cmdSetTimedSpeed_("!timedSpeed", cmdSetTimedSpeed);
-SerialCommand cmdSetUntimedSpeed_("!untimedSpeed", cmdSetUntimedSpeed);
-SerialCommand cmdStop_("!stop", cmdStop);
-SerialCommand cmdFlipMotor_("!flip", cmdFlipMotor);
-SerialCommand cmdModifyPidConsts_("!pid", cmdModifyPidConsts);
-SerialCommand cmdSetTarget_("!target", cmdSetTarget);
-SerialCommand cmdFlipPid_("!flipPid", cmdFlipPid);
-SerialCommand cmdGetPid_("!getPid", cmdGetPid);
-SerialCommand cmdServoTarget_("!servo", cmdServoTarget);
-SerialCommand cmdServoTargets_("!servos", cmdServoTargets);
-SerialCommand cmdStartSequence_("!seq", cmdStartSequence);
-SerialCommand cmdReset_("!reset", cmdReset);
+SerialCommand cmdSwitchMode_("sm", cmdSwitchMode);
+SerialCommand cmdSetTimedSpeed_("ts", cmdSetTimedSpeed);
+SerialCommand cmdSetUntimedSpeed_("us", cmdSetUntimedSpeed);
+SerialCommand cmdStop_("st", cmdStop);
+SerialCommand cmdFlipMotor_("fl", cmdFlipMotor);
+SerialCommand cmdModifyPidConsts_("pid", cmdModifyPidConsts);
+SerialCommand cmdSetTarget_("tg", cmdSetTarget);
+SerialCommand cmdFlipPid_("fp", cmdFlipPid);
+SerialCommand cmdGetPid_("gp", cmdGetPid);
+SerialCommand cmdServoTarget_("sv", cmdServoTarget);
+SerialCommand cmdServoTargets_("s3", cmdServoTargets);
+SerialCommand cmdStartSequence_("sq", cmdStartSequence);
+SerialCommand cmdReset_("rs", cmdReset);
 
 /*Sets up all of our custom serial commands.*/
 void setupSerialCommands() {
