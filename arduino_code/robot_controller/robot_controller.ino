@@ -8,7 +8,11 @@
 #include "arm.h"
 #include "sequencer.h"
 
-/*This project requires the SerialCommands library by Pedro Tiago Pereira and the CircularBuffer library by AgileWare.*/
+/*This project requires
+  SerialCommands by Pedro Tiago Pereira,
+  CircularBuffer by AgileWare,
+  MPU9250 by hideakitai and
+  Cytron Motor Drivers Library by Cytron Technologies Sdn Bhd.*/
 
 // Define motor pins.
 #define pwm1a 3
@@ -53,16 +57,16 @@ ArmController arm(&servo1, &servo2, &servo3);
 // Initialize the Sequencers.
 
 /*How to write a sequence:
-A sequence is defined by two arrays. One is an array of unsigned 8 bit ints (or chars)
-and the other is an array of usigned 16 bit ints. The first array with length x contains all the output signals
-in the sequence and second array with length x - 1 contains all the "delays" between the signals in ms.*/
+  A sequence is defined by two arrays. One is an array of unsigned 8 bit ints (or chars)
+  and the other is an array of unsigned 16 bit ints. The first array with length x contains all the output signals
+  in the sequence and the second array with length x - 1 contains all the "delays" between the signals in ms.*/
 
 const uint8_t sigs0[4] = {40, 50, 40, 30};
 const uint16_t pause0[3] = {2000, 2000, 2000};
 
-/*Initiating a Sequencer object requires the two earlier mentioned arrays as well as a pointer to a function
-and an int specification of how long the sequence is. The function is required to have one single uint8_t argument and
-is called in the sequencer with an element from the output array as input.*/
+/*Initializing a Sequencer object requires the two earlier mentioned arrays as well as a pointer to a function
+  and an int specification of how long the sequence is. The function is required to have one single uint8_t argument and
+  is called in the sequencer with an element from the output array as input.*/
 
 Sequencer seq0(&s0Input, 4, sigs0, pause0); // <pointer to function, length of sequence, signal array, delay array>
 
@@ -114,9 +118,9 @@ void setup() {
   pid.pidMod = -1;
 
   // Uncomment this to run the sequences for the servos at startup.
-//  seq0.startSequence();
-//  seq1.startSequence();
-//  seq2.startSequence();
+  //  seq0.startSequence();
+  //  seq1.startSequence();
+  //  seq2.startSequence();
 }
 
 void loop() {

@@ -23,14 +23,6 @@ void Sequencer::updateSequence() {
   func(*(_outputs + _currentIndex));
   _lastSignalTime = millis();
 
-  Serial.print(F("Sending "));
-  Serial.println(*(_outputs + _currentIndex));
-
-  if (_currentIndex != _sequenceSize - 1) {
-    Serial.print(F("Wait for "));
-    Serial.println(*(_pauses + _currentIndex));
-  }
-
   // Set _playing to false if the sequence is over.
   if (_currentIndex != _sequenceSize - 1) return;
 
