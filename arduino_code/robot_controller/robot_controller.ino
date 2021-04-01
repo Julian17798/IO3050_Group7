@@ -5,6 +5,8 @@
 #include "pid.h"
 #include "mpu_reader.h"
 #include "motor_controller.h"
+#include "arm.h"
+#include "sequencer.h"
 
 /*This project requires the SerialCommands library by Pedro Tiago Pereira and the CircularBuffer library by AgileWare.*/
 
@@ -40,16 +42,46 @@ CircularBuffer<int, mileageBufferSize> mileageBuffer;
 #define servo3Pin 7
 
 // Initialize Servo objects.
-Servo servo1;
-Servo servo2;
-Servo servo3;
+Servo servo1, servo2, servo3;
+
+// The default signals to the servos upon startup.
+const uint8_t defaultAngles[3] = {30, 60, 127};
+
+// Initialize an Arm Controller object and pass pointers to the servo objects.
+ArmController arm(&servo1, &servo2, &servo3);
+
+// Initialize the Sequencers.
+
+/*How to write a sequence:
+A sequence is defined by two arrays. One is an array of unsigned 8 bit ints (or chars)
+and the other is an array of usigned 16 bit ints. The first array with length x contains all the output signals
+in the sequence and second array with length x - 1 contains all the "delays" between the signals in ms.*/
+
+const uint8_t sigs0[4] = {40, 50, 40, 30};
+const uint16_t pause0[3] = {2000, 2000, 2000};
+
+/*Initiating a Sequencer object requires the two earlier mentioned arrays as well as a pointer to a function
+and an int specification of how long the sequence is. The function is required to have one single uint8_t argument and
+is called in the sequencer with an element from the output array as input.*/
+
+Sequencer seq0(&s0Input, 4, sigs0, pause0); // <pointer to function, length of sequence, signal array, delay array>
+
+const uint8_t sigs1[4] = {200, 150, 200, 100};
+const uint16_t pause1[3] = {2000, 2000, 2000};
+
+Sequencer seq1(&s1Input, 4, sigs1, pause1);
+
+const uint8_t sigs2[4] = {200, 150, 200, 100};
+const uint16_t pause2[3] = {2000, 2000, 2000};
+
+Sequencer seq2(&s2Input, 4, sigs2, pause2);
+
 
 #define motorUpdateInterval 20
 
 bool balanceMode = true;
 
-float target = 0.0;
-float offset = 0.0;
+float target = 0.0, offset = 0.0;
 
 unsigned long lastMotorUpdateTime = 0;
 
@@ -57,13 +89,6 @@ void setup() {
   Serial.begin(38400);
   Wire.begin();
   delay(2000);
-
-  // Attach servo pins.
-  servo1.attach(servo1Pin);
-  servo2.attach(servo2Pin);
-  servo3.attach(servo3Pin);
-
-  testServos();
 
   // Setup the MPU reader.
   mpu.mpuSetup(0x68);
@@ -75,13 +100,6 @@ void setup() {
 
   delay(2000);
 
-  // Turn on the motors for one second.
-//  motorController.setMotorsUntimed(100, 100, false);
-//
-//  delay(1000);
-//
-//  motorController.setMotorsUntimed(0, 0, false);
-
   // Fill the buffers with 0.
   fillBuffer(angleBuffer, 0, true);
   fillBuffer(mileageBuffer, 0, true);
@@ -89,12 +107,24 @@ void setup() {
   // Calibrate the angle for 5000 ms.
   calibrateAngle(5000);
 
+  // Setup the servos in the mechanical arm.
+  arm.setupServos(servo1Pin, servo2Pin, servo3Pin, defaultAngles);
+
   Serial.println(F("*START*"));
   pid.pidMod = -1;
+
+  // Uncomment this to run the sequences for the servos at startup.
+//  seq0.startSequence();
+//  seq1.startSequence();
+//  seq2.startSequence();
 }
 
 void loop() {
   handleSerial();
+  seq0.updateSequence();
+  seq1.updateSequence();
+  seq2.updateSequence();
+  arm.updateArm();
   handleMotors();
 }
 
@@ -118,7 +148,7 @@ void handleMotors() {
     int pidResult = (int) pid.runCycle(bufferAverage(angleBuffer) / 100);
 
     // Check whether the robot is balanced.
-    bool balanced = pidResult > -motorController.minSignal && pidResult < motorController.minSignal;
+    bool balanced = abs(pidResult) < motorController.minSignal;
 
     // Add mileage to the mileage buffer.
     int mileageInput = balanced ? 0 : pidResult;
@@ -127,7 +157,6 @@ void handleMotors() {
     // Do PD calculations for the dynamic setpoint and set the offset.
     offset += targetPid.runCycle(-bufferSum(mileageBuffer));
     offset = constrain(offset, -20, 20);
-    offset = 0;
     pid.targetValue = target + offset;
 
     Serial.print(bufferAverage(angleBuffer) / 100);
@@ -146,75 +175,14 @@ void handleMotors() {
   }
 }
 
-/*Fills a given int buffer with the given int number.*/
-template<size_t S>
-void fillBuffer(CircularBuffer<int, S> &cb, int filler, bool completeFill) {
-
-  // Fill the buffer until it's full.
-  if (!completeFill) {
-    while (!cb.isFull()) cb.push(filler);
-  }
-  // Or completely fill the buffer with the given filler.
-  else {
-    for (int i = 0; i < cb.size(); i++) cb.push(filler);
-  }
+void s0Input(uint8_t sig) {
+  arm.setTarget(0, sig);
 }
 
-/*Returns the sum of an int buffer.*/
-template<size_t S>
-int bufferSum(CircularBuffer<int, S> &cb) {
-
-  // Loop over all elements in the buffer and add them together.
-  int sum = 0;
-  for (int i = 0; i < cb.size(); i++) sum += cb[i];
-  return sum;
+void s1Input(uint8_t sig) {
+  arm.setTarget(1, sig);
 }
 
-/*Returns the float average of an int buffer.*/
-template<size_t S>
-float bufferAverage(CircularBuffer<int, S> &cb) {
-
-  // Get the sum of the buffer and divide by its size.
-  int sum = bufferSum(cb);
-  return (float) sum / cb.size();
-}
-
-/*Calibrates the mpu angle for a given amount of time.*/
-void calibrateAngle(int calibrationTime) {
-
-  // Recalibrate the angle for the given amount of time.
-  unsigned long startTime = millis();
-  while (startTime + calibrationTime > millis()) {
-    int angle = mpu.updateAngle();
-    angleBuffer.push(angle);
-  }
-
-  // Assign the new target value and reset the offset to 0.0.
-  target = bufferAverage(angleBuffer) / 100;
-  offset = 0.0;
-}
-
-void testServos() {
-  delay(2000);
-  Serial.println("Moving servo1");
-  servo1.write(10);
-  delay(2000);
-  Serial.println("Moving servo2");
-  servo2.write(10);
-  delay(2000);
-  Serial.println("Moving servo3");
-  servo3.write(10);
-  delay(2000);
-  Serial.println("Moving servo1");
-  servo1.write(200);
-  delay(2000);
-  Serial.println("Moving servo2");
-  servo2.write(200);
-  delay(2000);
-  Serial.println("Moving servo3");
-  servo3.write(200);
-  delay(2000);
-//  servo1.detach();
-//  servo2.detach();
-//  servo3.detach();
+void s2Input(uint8_t sig) {
+  arm.setTarget(2, sig);
 }

@@ -9,7 +9,6 @@
 class MPUReader {
 
   private:
-    int _ledPin;
     int _currentAngle;
     unsigned long _lastUpdateTime;
     MPU9250 _mpu;
